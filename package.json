@@ -1,12 +1,13 @@
 {
   "name": "utl-ticket-bot",
   "version": "1.0.0",
-  "description": "Sistema de Tickets da UTL",
+  "description": "Sistema de Tickets e Contracts da UTL",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
     "discord.js": "^14.26.2"
   }
 }
