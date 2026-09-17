@@ -33,8 +33,7 @@ const TEAM_ROLES = {
 // CANAL ALTERNATIVO DE CONTRATOS
 // =====================================================
 
-const CONTRACT_PUBLIC_CHANNEL_ID =
-    "1543911670659682365";
+const CONTRACT_PUBLIC_CHANNEL_ID = config.CONTRACT_PUBLIC_CHANNEL_ID;
 
 // =====================================================
 // POSIÇÕES
