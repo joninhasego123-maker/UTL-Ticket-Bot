@@ -30,10 +30,11 @@ const TEAM_ROLES = {
 };
 
 // =====================================================
-// CANAL ALTERNATIVO DE CONTRATOS
+// CANAL PÚBLICO DOS CONTRATOS
 // =====================================================
 
-const CONTRACT_PUBLIC_CHANNEL_ID = config.CONTRACT_PUBLIC_CHANNEL_ID;
+const CONTRACT_PUBLIC_CHANNEL_ID =
+    config.CONTRACT_PUBLIC_CHANNEL_ID;
 
 // =====================================================
 // POSIÇÕES
@@ -189,9 +190,6 @@ const contractCommands = [
                     "Jogador que será liberado."
                 )
                 .setRequired(true)
-        )
-        .setDefaultMemberPermissions(
-            PermissionFlagsBits.Administrator.toString()
         )
 ];
 
@@ -613,12 +611,19 @@ async function executarContract(interaction) {
             );
 
         // =============================================
-        // SEMPRE ENVIAR NO CANAL
+        // ENVIAR NO CANAL PÚBLICO
         // =============================================
 
         let canalEnviado = false;
 
         try {
+
+            if (!CONTRACT_PUBLIC_CHANNEL_ID) {
+
+                throw new Error(
+                    "CONTRACT_PUBLIC_CHANNEL_ID não está configurado no config.js"
+                );
+            }
 
             const channel =
                 await interaction.client.channels
@@ -626,22 +631,31 @@ async function executarContract(interaction) {
                         CONTRACT_PUBLIC_CHANNEL_ID
                     );
 
-            if (channel) {
+            if (!channel) {
 
-                await channel.send({
-
-                    content:
-                        `📄 Novo contrato para ${player}`,
-
-                    components: [
-                        contractContainer
-                    ],
-
-                    flags: 32768
-                });
-
-                canalEnviado = true;
+                throw new Error(
+                    `Canal ${CONTRACT_PUBLIC_CHANNEL_ID} não encontrado.`
+                );
             }
+
+            console.log(
+                `📢 Tentando enviar contrato no canal ${CONTRACT_PUBLIC_CHANNEL_ID}...`
+            );
+
+            await channel.send({
+
+                components: [
+                    contractContainer
+                ],
+
+                flags: 32768
+            });
+
+            canalEnviado = true;
+
+            console.log(
+                `✅ Contrato enviado no canal ${CONTRACT_PUBLIC_CHANNEL_ID}.`
+            );
 
         } catch (channelError) {
 
@@ -652,7 +666,7 @@ async function executarContract(interaction) {
         }
 
         // =============================================
-        // TENTAR ENVIAR NA DM
+        // ENVIAR NA DM
         // =============================================
 
         let dmEnviada = false;
@@ -670,11 +684,16 @@ async function executarContract(interaction) {
 
             dmEnviada = true;
 
+            console.log(
+                `✅ Contrato enviado na DM de ${player.tag}.`
+            );
+
         } catch (dmError) {
 
             console.log(
                 `⚠️ Não foi possível enviar DM para ${player.tag}.`
             );
+
         }
 
         // =============================================
@@ -688,7 +707,7 @@ async function executarContract(interaction) {
 
             return interaction.reply({
                 content:
-                    `✅ Contrato enviado para ${player} na DM e no canal de contratos.`,
+                    `✅ Contrato enviado para ${player} na DM e no canal <#${CONTRACT_PUBLIC_CHANNEL_ID}>.`,
                 ephemeral: true
             });
         }
@@ -712,7 +731,7 @@ async function executarContract(interaction) {
 
             return interaction.reply({
                 content:
-                    `⚠️ Contrato enviado para ${player} na DM, mas não consegui enviar no canal de contratos.`,
+                    `⚠️ Contrato enviado para ${player} na DM, mas não consegui enviar no canal <#${CONTRACT_PUBLIC_CHANNEL_ID}>.\n\nVerifique as permissões do bot nesse canal.`,
                 ephemeral: true
             });
         }
