@@ -30,6 +30,13 @@ const TEAM_ROLES = {
 };
 
 // =====================================================
+// CANAL ALTERNATIVO DE CONTRATOS
+// =====================================================
+
+const CONTRACT_PUBLIC_CHANNEL_ID =
+    "1543911670659682365";
+
+// =====================================================
 // POSIÇÕES
 // =====================================================
 
@@ -190,7 +197,7 @@ const contractCommands = [
 ];
 
 // =====================================================
-// VERIFICAR CANAL
+// VERIFICAR CANAL DOS COMANDOS
 // =====================================================
 
 function verificarCanal(interaction) {
@@ -202,7 +209,7 @@ function verificarCanal(interaction) {
 }
 
 // =====================================================
-// CRIAR CONTRATO VISUAL
+// CONTAINER DO CONTRATO
 // =====================================================
 
 function criarContratoContainer(
@@ -289,6 +296,7 @@ function criarContratoContainer(
 async function executarPerm(interaction) {
 
     if (!verificarCanal(interaction)) {
+
         return interaction.reply({
             content:
                 `❌ Este comando só pode ser usado em <#${config.CONTRACT_CHANNEL_ID}>.`,
@@ -303,6 +311,7 @@ async function executarPerm(interaction) {
         interaction.options.getRole("team");
 
     if (!TEAM_ROLES[teamRole.id]) {
+
         return interaction.reply({
             content:
                 "❌ Esse cargo não é um dos times da UTL.",
@@ -317,8 +326,11 @@ async function executarPerm(interaction) {
                 .from("manager_permissions")
                 .upsert(
                     {
-                        manager_id: manager.id,
-                        team_role_id: teamRole.id
+                        manager_id:
+                            manager.id,
+
+                        team_role_id:
+                            teamRole.id
                     },
                     {
                         onConflict:
@@ -368,6 +380,7 @@ async function executarPerm(interaction) {
 async function executarUnperm(interaction) {
 
     if (!verificarCanal(interaction)) {
+
         return interaction.reply({
             content:
                 `❌ Este comando só pode ser usado em <#${config.CONTRACT_CHANNEL_ID}>.`,
@@ -431,6 +444,7 @@ async function executarUnperm(interaction) {
 async function executarContract(interaction) {
 
     if (!verificarCanal(interaction)) {
+
         return interaction.reply({
             content:
                 `❌ Este comando só pode ser usado em <#${config.CONTRACT_CHANNEL_ID}>.`,
@@ -451,6 +465,7 @@ async function executarContract(interaction) {
         interaction.options.getString("function");
 
     if (player.id === managerId) {
+
         return interaction.reply({
             content:
                 "❌ Você não pode enviar um contrato para si mesmo.",
@@ -461,7 +476,7 @@ async function executarContract(interaction) {
     try {
 
         // =============================================
-        // BUSCAR PERMISSÃO
+        // BUSCAR PERMISSÃO DO MANAGER
         // =============================================
 
         const {
@@ -493,6 +508,7 @@ async function executarContract(interaction) {
         }
 
         if (!permission) {
+
             return interaction.reply({
                 content:
                     "❌ Você não possui permissão para usar o `/contract`.",
@@ -507,6 +523,7 @@ async function executarContract(interaction) {
             TEAM_ROLES[teamRoleId];
 
         if (!teamName) {
+
             return interaction.reply({
                 content:
                     "❌ O time da sua permissão não é válido.",
@@ -524,6 +541,7 @@ async function executarContract(interaction) {
                 .catch(() => null);
 
         if (!playerMember) {
+
             return interaction.reply({
                 content:
                     "❌ Esse jogador precisa estar no servidor da UTL.",
@@ -532,7 +550,7 @@ async function executarContract(interaction) {
         }
 
         // =============================================
-        // CRIAR NO BANCO
+        // CRIAR CONTRATO NO BANCO
         // =============================================
 
         const {
@@ -541,6 +559,7 @@ async function executarContract(interaction) {
         } = await supabase
             .from("contracts")
             .insert({
+
                 guild_id:
                     interaction.guildId,
 
@@ -583,7 +602,7 @@ async function executarContract(interaction) {
         }
 
         // =============================================
-        // CRIAR CONTAINER
+        // CRIAR CONTRATO VISUAL
         // =============================================
 
         const contractContainer =
@@ -595,27 +614,34 @@ async function executarContract(interaction) {
             );
 
         // =============================================
-        // ENVIAR NO CANAL
+        // SEMPRE ENVIAR NO CANAL
         // =============================================
+
+        let canalEnviado = false;
 
         try {
 
-            const contractChannel =
+            const channel =
                 await interaction.client.channels
                     .fetch(
-                        config.CONTRACT_CHANNEL_ID
+                        CONTRACT_PUBLIC_CHANNEL_ID
                     );
 
-            if (contractChannel) {
+            if (channel) {
 
-                await contractChannel.send({
+                await channel.send({
+
                     content:
                         `📄 Novo contrato para ${player}`,
+
                     components: [
                         contractContainer
                     ],
+
                     flags: 32768
                 });
+
+                canalEnviado = true;
             }
 
         } catch (channelError) {
@@ -627,49 +653,76 @@ async function executarContract(interaction) {
         }
 
         // =============================================
-        // ENVIAR NA DM
+        // TENTAR ENVIAR NA DM
         // =============================================
 
-        let dmEnviada = true;
+        let dmEnviada = false;
 
         try {
 
             await player.send({
+
                 components: [
                     contractContainer
                 ],
+
                 flags: 32768
             });
 
+            dmEnviada = true;
+
         } catch (dmError) {
 
-            dmEnviada = false;
-
             console.log(
-                `⚠️ Não foi possível enviar DM para ${player.tag}. O contrato continuará disponível no canal.`
+                `⚠️ Não foi possível enviar DM para ${player.tag}.`
             );
         }
 
         // =============================================
-        // RESPOSTA AO MANAGER
+        // RESULTADO
         // =============================================
 
-        if (dmEnviada) {
+        if (
+            dmEnviada &&
+            canalEnviado
+        ) {
 
             return interaction.reply({
                 content:
                     `✅ Contrato enviado para ${player} na DM e no canal de contratos.`,
                 ephemeral: true
             });
+        }
 
-        } else {
+        if (
+            !dmEnviada &&
+            canalEnviado
+        ) {
 
             return interaction.reply({
                 content:
-                    `✅ Contrato criado para ${player} e enviado no canal de contratos.\n⚠️ Não foi possível enviar a DM do jogador.`,
+                    `✅ Contrato enviado no canal <#${CONTRACT_PUBLIC_CHANNEL_ID}>.\n⚠️ A DM de ${player} está fechada ou indisponível.`,
                 ephemeral: true
             });
         }
+
+        if (
+            dmEnviada &&
+            !canalEnviado
+        ) {
+
+            return interaction.reply({
+                content:
+                    `⚠️ Contrato enviado para ${player} na DM, mas não consegui enviar no canal de contratos.`,
+                ephemeral: true
+            });
+        }
+
+        return interaction.reply({
+            content:
+                "❌ Não consegui enviar o contrato nem na DM nem no canal.",
+            ephemeral: true
+        });
 
     } catch (error) {
 
@@ -687,7 +740,7 @@ async function executarContract(interaction) {
 }
 
 // =====================================================
-// PROCESSAR BOTÃO
+// PROCESSAR BOTÕES
 // =====================================================
 
 async function processarBotaoContrato(interaction) {
@@ -732,7 +785,10 @@ async function processarBotaoContrato(interaction) {
         } = await supabase
             .from("contracts")
             .select("*")
-            .eq("id", contractId)
+            .eq(
+                "id",
+                contractId
+            )
             .maybeSingle();
 
         if (error) {
@@ -750,6 +806,7 @@ async function processarBotaoContrato(interaction) {
         }
 
         if (!contract) {
+
             return interaction.reply({
                 content:
                     "❌ Este contrato não existe mais.",
@@ -800,11 +857,13 @@ async function processarBotaoContrato(interaction) {
             } = await supabase
                 .from("contracts")
                 .update({
+
                     status:
                         "declined",
 
                     updated_at:
                         new Date().toISOString()
+
                 })
                 .eq(
                     "id",
@@ -836,26 +895,33 @@ async function processarBotaoContrato(interaction) {
             );
 
             return interaction.update({
+
                 components: [
+
                     new ContainerBuilder()
+
                         .addTextDisplayComponents(
                             new TextDisplayBuilder()
                                 .setContent(
                                     "## 📄 CONTRATO"
                                 )
                         )
+
                         .addSeparatorComponents(
                             new SeparatorBuilder()
                         )
+
                         .addTextDisplayComponents(
                             new TextDisplayBuilder()
                                 .setContent(
                                     "## ❌ CONTRATO RECUSADO"
                                 )
                         )
+
                         .addSeparatorComponents(
                             new SeparatorBuilder()
                         )
+
                         .addTextDisplayComponents(
                             new TextDisplayBuilder()
                                 .setContent(
@@ -863,6 +929,7 @@ async function processarBotaoContrato(interaction) {
                                 )
                         )
                 ],
+
                 flags: 32768
             });
         }
@@ -943,7 +1010,7 @@ async function processarBotaoContrato(interaction) {
             }
 
             // =========================================
-            // DAR CARGO
+            // ADICIONAR CARGO
             // =========================================
 
             try {
@@ -975,11 +1042,13 @@ async function processarBotaoContrato(interaction) {
             } = await supabase
                 .from("contracts")
                 .update({
+
                     status:
                         "accepted",
 
                     updated_at:
                         new Date().toISOString()
+
                 })
                 .eq(
                     "id",
@@ -1025,7 +1094,9 @@ async function processarBotaoContrato(interaction) {
             // =========================================
 
             return interaction.update({
+
                 components: [
+
                     new ContainerBuilder()
 
                         .addTextDisplayComponents(
@@ -1070,6 +1141,7 @@ async function processarBotaoContrato(interaction) {
                                 )
                         )
                 ],
+
                 flags: 32768
             });
         }
@@ -1115,9 +1187,11 @@ async function registrarContrato(
                 .catch(() => null);
 
         if (!channel) {
+
             console.error(
                 "❌ Canal de log não encontrado."
             );
+
             return;
         }
 
@@ -1190,6 +1264,7 @@ async function registrarContrato(
 async function executarRelease(interaction) {
 
     if (!verificarCanal(interaction)) {
+
         return interaction.reply({
             content:
                 `❌ Este comando só pode ser usado em <#${config.CONTRACT_CHANNEL_ID}>.`,
@@ -1208,7 +1283,7 @@ async function executarRelease(interaction) {
     try {
 
         // =============================================
-        // PERMISSÃO
+        // BUSCAR PERMISSÃO
         // =============================================
 
         const {
@@ -1240,6 +1315,7 @@ async function executarRelease(interaction) {
         }
 
         if (!permission) {
+
             return interaction.reply({
                 content:
                     "❌ Você não possui permissão para usar o `/release`.",
@@ -1254,6 +1330,7 @@ async function executarRelease(interaction) {
             TEAM_ROLES[teamRoleId];
 
         if (!teamName) {
+
             return interaction.reply({
                 content:
                     "❌ O time da sua permissão não é válido.",
@@ -1262,7 +1339,7 @@ async function executarRelease(interaction) {
         }
 
         // =============================================
-        // PLAYER
+        // BUSCAR PLAYER
         // =============================================
 
         const member =
@@ -1273,6 +1350,7 @@ async function executarRelease(interaction) {
                 .catch(() => null);
 
         if (!member) {
+
             return interaction.reply({
                 content:
                     "❌ Esse jogador não está no servidor.",
@@ -1281,7 +1359,7 @@ async function executarRelease(interaction) {
         }
 
         // =============================================
-        // CARGO
+        // VERIFICAR CARGO
         // =============================================
 
         if (
@@ -1298,7 +1376,7 @@ async function executarRelease(interaction) {
         }
 
         // =============================================
-        // REMOVER
+        // REMOVER CARGO
         // =============================================
 
         try {
@@ -1322,7 +1400,7 @@ async function executarRelease(interaction) {
         }
 
         // =============================================
-        // ATUALIZAR CONTRATO
+        // ATUALIZAR BANCO
         // =============================================
 
         const {
@@ -1330,11 +1408,13 @@ async function executarRelease(interaction) {
         } = await supabase
             .from("contracts")
             .update({
+
                 status:
                     "released",
 
                 updated_at:
                     new Date().toISOString()
+
             })
             .eq(
                 "player_id",
