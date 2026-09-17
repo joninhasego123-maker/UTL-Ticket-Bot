@@ -33,10 +33,6 @@ const TEAMS = {
 // FUNÇÕES AUXILIARES
 // =====================================================
 
-function teamRoleIdByName(teamName) {
-    return TEAMS[teamName];
-}
-
 function teamNameByRoleId(roleId) {
     return Object.keys(TEAMS).find(
         name => TEAMS[name] === roleId
@@ -206,7 +202,7 @@ const releaseCommand = new SlashCommandBuilder()
     );
 
 // =====================================================
-// LISTA DOS COMANDOS
+// COMANDOS
 // =====================================================
 
 const contractCommands = [
@@ -234,10 +230,6 @@ function criarContratoCV2({
     const container =
         new ContainerBuilder();
 
-    // =============================================
-    // TÍTULO
-    // =============================================
-
     container.addTextDisplayComponents(
         new TextDisplayBuilder()
             .setContent(
@@ -251,16 +243,12 @@ function criarContratoCV2({
         new SeparatorBuilder()
     );
 
-    // =============================================
-    // INFORMAÇÕES
-    // =============================================
-
     container.addTextDisplayComponents(
         new TextDisplayBuilder()
             .setContent(
 
                 `## 🏆 TEAM\n` +
-                `<@&${teamRoleIdByName(teamName)}>\n\n` +
+                `<@&${TEAMS[teamName]}>\n\n` +
 
                 `## 👔 MANAGER\n` +
                 `${manager}\n` +
@@ -278,10 +266,6 @@ function criarContratoCV2({
             )
     );
 
-    // =============================================
-    // STATUS
-    // =============================================
-
     container.addSeparatorComponents(
         new SeparatorBuilder()
     );
@@ -293,10 +277,6 @@ function criarContratoCV2({
                 "🟡 **Aguardando resposta do jogador**"
             )
     );
-
-    // =============================================
-    // BOTÕES
-    // =============================================
 
     container.addSeparatorComponents(
         new SeparatorBuilder()
@@ -331,10 +311,6 @@ function criarContratoCV2({
         buttons
     );
 
-    // =============================================
-    // RODAPÉ
-    // =============================================
-
     container.addSeparatorComponents(
         new SeparatorBuilder()
     );
@@ -350,14 +326,14 @@ function criarContratoCV2({
 }
 
 // =====================================================
-// /PERM
+// EXECUTAR /PERM
 // =====================================================
 
 async function executarPerm(interaction) {
 
-    // =============================================
-    // CANAL
-    // =============================================
+    // =================================================
+    // VERIFICAR CANAL
+    // =================================================
 
     if (!isContractChannel(interaction)) {
 
@@ -368,9 +344,9 @@ async function executarPerm(interaction) {
         });
     }
 
-    // =============================================
-    // ADMIN
-    // =============================================
+    // =================================================
+    // VERIFICAR ADMIN
+    // =================================================
 
     if (
         !interaction.memberPermissions.has(
@@ -385,9 +361,9 @@ async function executarPerm(interaction) {
         });
     }
 
-    // =============================================
-    // OPÇÕES
-    // =============================================
+    // =================================================
+    // PEGAR OPÇÕES
+    // =================================================
 
     const user =
         interaction.options.getUser(
@@ -399,11 +375,24 @@ async function executarPerm(interaction) {
             "team"
         );
 
-    // =============================================
-    // VERIFICA TEAM
-    // =============================================
+    // =================================================
+    // VERIFICAR CARGO
+    // =================================================
 
-    if (!isValidTeamRole(teamRole.id)) {
+    if (!teamRole) {
+
+        return interaction.reply({
+            content:
+                "❌ Você precisa selecionar um Team.",
+            ephemeral: true
+        });
+    }
+
+    if (
+        !isValidTeamRole(
+            teamRole.id
+        )
+    ) {
 
         return interaction.reply({
             content:
@@ -417,48 +406,58 @@ async function executarPerm(interaction) {
             teamRole.id
         );
 
-    // =============================================
+    // =================================================
     // SALVAR NO SUPABASE
-    // =============================================
+    // =================================================
 
-    const { error } = await supabase
-        .from("manager_permissions")
-        .upsert({
-            manager_id: user.id,
-            team_role_id: teamRole.id
-        });
+    const { error } =
+        await supabase
+            .from("manager_permissions")
+            .upsert(
+                {
+                    manager_id:
+                        user.id,
+
+                    team_role_id:
+                        teamRole.id
+                },
+                {
+                    onConflict:
+                        "manager_id"
+                }
+            );
 
     if (error) {
 
         console.error(
-            "❌ Erro ao salvar permissão:",
+            "❌ ERRO COMPLETO DO SUPABASE:",
             error
         );
 
         return interaction.reply({
             content:
-                "❌ Não foi possível salvar a permissão.",
+                `❌ Erro ao salvar a permissão.\n\`\`\`\n${error.message}\n\`\`\``,
             ephemeral: true
         });
     }
 
-    // =============================================
-    // RESPOSTA
-    // =============================================
+    // =================================================
+    // SUCESSO
+    // =================================================
 
     return interaction.reply({
 
         content:
-            `✅ ${user} agora possui permissão para criar contratos.\n\n` +
+            `✅ ${user} recebeu permissão para criar contratos.\n\n` +
             `🏆 **Team:** <@&${teamRole.id}>\n` +
-            `📋 **Team:** ${teamName}`,
+            `📋 **Nome:** ${teamName}`,
 
         ephemeral: true
     });
 }
 
 // =====================================================
-// /UNPERM
+// EXECUTAR /UNPERM
 // =====================================================
 
 async function executarUnperm(interaction) {
@@ -490,13 +489,14 @@ async function executarUnperm(interaction) {
             "usuario"
         );
 
-    const { error } = await supabase
-        .from("manager_permissions")
-        .delete()
-        .eq(
-            "manager_id",
-            user.id
-        );
+    const { error } =
+        await supabase
+            .from("manager_permissions")
+            .delete()
+            .eq(
+                "manager_id",
+                user.id
+            );
 
     if (error) {
 
@@ -507,7 +507,7 @@ async function executarUnperm(interaction) {
 
         return interaction.reply({
             content:
-                "❌ Não foi possível remover a permissão.",
+                `❌ Erro ao remover a permissão.\n\`\`\`\n${error.message}\n\`\`\``,
             ephemeral: true
         });
     }
@@ -522,14 +522,10 @@ async function executarUnperm(interaction) {
 }
 
 // =====================================================
-// /CONTRACT
+// EXECUTAR /CONTRACT
 // =====================================================
 
 async function executarContract(interaction) {
-
-    // =============================================
-    // CANAL
-    // =============================================
 
     if (!isContractChannel(interaction)) {
 
@@ -540,9 +536,9 @@ async function executarContract(interaction) {
         });
     }
 
-    // =============================================
-    // PERMISSÃO
-    // =============================================
+    // =================================================
+    // BUSCAR PERMISSÃO
+    // =================================================
 
     const permission =
         await getManagerPermission(
@@ -558,9 +554,9 @@ async function executarContract(interaction) {
         });
     }
 
-    // =============================================
-    // OPÇÕES
-    // =============================================
+    // =================================================
+    // PEGAR OPÇÕES
+    // =================================================
 
     const player =
         interaction.options.getUser(
@@ -577,9 +573,9 @@ async function executarContract(interaction) {
             "function"
         );
 
-    // =============================================
-    // TEAM
-    // =============================================
+    // =================================================
+    // VERIFICAR TEAM
+    // =================================================
 
     const teamName =
         teamNameByRoleId(
@@ -595,9 +591,9 @@ async function executarContract(interaction) {
         });
     }
 
-    // =============================================
+    // =================================================
     // NÃO PODE CONTRATAR A SI MESMO
-    // =============================================
+    // =================================================
 
     if (
         player.id ===
@@ -611,9 +607,9 @@ async function executarContract(interaction) {
         });
     }
 
-    // =============================================
-    // CRIAR CONTRATO
-    // =============================================
+    // =================================================
+    // CRIAR CONTRATO NO SUPABASE
+    // =================================================
 
     const {
         data,
@@ -655,24 +651,20 @@ async function executarContract(interaction) {
 
         return interaction.reply({
             content:
-                "❌ Não foi possível criar o contrato.",
+                `❌ Não foi possível criar o contrato.\n\`\`\`\n${error.message}\n\`\`\``,
             ephemeral: true
         });
     }
 
-    // =============================================
-    // MENÇÕES
-    // =============================================
+    // =================================================
+    // CRIAR CONTRATO
+    // =================================================
 
     const managerMention =
         `<@${interaction.user.id}>`;
 
     const playerMention =
         `<@${player.id}>`;
-
-    // =============================================
-    // CV2
-    // =============================================
 
     const container =
         criarContratoCV2({
@@ -699,9 +691,9 @@ async function executarContract(interaction) {
                 data.id
         });
 
-    // =============================================
+    // =================================================
     // ENVIAR NO CANAL
-    // =============================================
+    // =================================================
 
     await interaction.channel.send({
 
@@ -712,9 +704,9 @@ async function executarContract(interaction) {
         flags: 32768
     });
 
-    // =============================================
+    // =================================================
     // ENVIAR DM
-    // =============================================
+    // =================================================
 
     try {
 
@@ -754,14 +746,14 @@ async function executarContract(interaction) {
 
     } catch (error) {
 
-        console.log(
+        console.error(
             `⚠️ Não foi possível enviar DM para ${player.tag}.`
         );
     }
 
-    // =============================================
+    // =================================================
     // RESPOSTA
-    // =============================================
+    // =================================================
 
     return interaction.reply({
 
@@ -775,14 +767,10 @@ async function executarContract(interaction) {
 }
 
 // =====================================================
-// /RELEASE
+// EXECUTAR /RELEASE
 // =====================================================
 
 async function executarRelease(interaction) {
-
-    // =============================================
-    // CANAL
-    // =============================================
 
     if (!isContractChannel(interaction)) {
 
@@ -793,18 +781,14 @@ async function executarRelease(interaction) {
         });
     }
 
-    // =============================================
-    // PLAYER
-    // =============================================
-
     const player =
         interaction.options.getUser(
             "player"
         );
 
-    // =============================================
-    // PERMISSÃO DO MANAGER
-    // =============================================
+    // =================================================
+    // BUSCAR PERMISSÃO
+    // =================================================
 
     const permission =
         await getManagerPermission(
@@ -825,9 +809,9 @@ async function executarRelease(interaction) {
             permission.team_role_id
         );
 
-    // =============================================
-    // BUSCAR PLAYER
-    // =============================================
+    // =================================================
+    // BUSCAR MEMBRO
+    // =================================================
 
     let member;
 
@@ -847,9 +831,9 @@ async function executarRelease(interaction) {
         });
     }
 
-    // =============================================
+    // =================================================
     // VERIFICAR CARGO
-    // =============================================
+    // =================================================
 
     if (
         !member.roles.cache.has(
@@ -866,9 +850,9 @@ async function executarRelease(interaction) {
         });
     }
 
-    // =============================================
+    // =================================================
     // REMOVER CARGO
-    // =============================================
+    // =================================================
 
     try {
 
@@ -895,9 +879,9 @@ async function executarRelease(interaction) {
         });
     }
 
-    // =============================================
+    // =================================================
     // RESPOSTA
-    // =============================================
+    // =================================================
 
     return interaction.reply({
 
@@ -920,9 +904,9 @@ async function processarBotaoContrato(
     const customId =
         interaction.customId;
 
-    // =============================================
+    // =================================================
     // VERIFICAR BOTÃO
-    // =============================================
+    // =================================================
 
     if (
         !customId.startsWith(
@@ -936,25 +920,17 @@ async function processarBotaoContrato(
         return false;
     }
 
-    // =============================================
-    // TIPO
-    // =============================================
-
     const isAccept =
         customId.startsWith(
             "contract_accept_"
         );
 
-    // =============================================
-    // ID
-    // =============================================
-
     const contractId =
         customId.split("_").pop();
 
-    // =============================================
+    // =================================================
     // BUSCAR CONTRATO
-    // =============================================
+    // =================================================
 
     const {
         data: contract,
@@ -984,9 +960,9 @@ async function processarBotaoContrato(
         return true;
     }
 
-    // =============================================
-    // SOMENTE PLAYER
-    // =============================================
+    // =================================================
+    // VERIFICAR PLAYER
+    // =================================================
 
     if (
         interaction.user.id !==
@@ -1004,9 +980,9 @@ async function processarBotaoContrato(
         return true;
     }
 
-    // =============================================
-    // JÁ RESPONDIDO
-    // =============================================
+    // =================================================
+    // VERIFICAR STATUS
+    // =================================================
 
     if (
         contract.status !==
@@ -1028,18 +1004,14 @@ async function processarBotaoContrato(
         return true;
     }
 
-    // =============================================
-    // NOVO STATUS
-    // =============================================
-
     const newStatus =
         isAccept
             ? "accepted"
             : "declined";
 
-    // =============================================
-    // ATUALIZAR BANCO
-    // =============================================
+    // =================================================
+    // ATUALIZAR CONTRATO
+    // =================================================
 
     const {
         error: updateError
@@ -1068,7 +1040,7 @@ async function processarBotaoContrato(
         await interaction.reply({
 
             content:
-                "❌ Não foi possível atualizar o contrato.",
+                `❌ Não foi possível atualizar o contrato.\n\`\`\`\n${updateError.message}\n\`\`\``,
 
             ephemeral: true
         });
@@ -1076,31 +1048,29 @@ async function processarBotaoContrato(
         return true;
     }
 
-    // =============================================
+    // =================================================
     // TEAM
-    // =============================================
+    // =================================================
 
     const teamName =
         teamNameByRoleId(
             contract.team_role_id
         );
 
-    // =============================================
-    // ACEITOU → ADICIONAR CARGO
-    // =============================================
+    // =================================================
+    // ACEITOU
+    // =================================================
 
     if (isAccept) {
 
         try {
 
-            // Só funciona se a interação
-            // aconteceu dentro do servidor
             if (!interaction.guild) {
 
                 await interaction.reply({
 
                     content:
-                        "❌ O contrato foi aceito, mas a confirmação precisa ser feita dentro do servidor para adicionar o cargo.",
+                        "❌ O contrato foi aceito, mas o cargo precisa ser adicionado dentro do servidor.",
 
                     ephemeral: true
                 });
@@ -1139,9 +1109,9 @@ async function processarBotaoContrato(
         }
     }
 
-    // =============================================
-    // RESPOSTA AO PLAYER
-    // =============================================
+    // =================================================
+    // RESPOSTA
+    // =================================================
 
     await interaction.reply({
 
@@ -1155,9 +1125,9 @@ async function processarBotaoContrato(
         ephemeral: true
     });
 
-    // =============================================
+    // =================================================
     // LOG
-    // =============================================
+    // =================================================
 
     const logChannel =
         await interaction.client.channels
@@ -1172,10 +1142,6 @@ async function processarBotaoContrato(
 
         const logContainer =
             new ContainerBuilder();
-
-        // =========================================
-        // TÍTULO
-        // =========================================
 
         logContainer.addTextDisplayComponents(
 
@@ -1193,10 +1159,6 @@ async function processarBotaoContrato(
         logContainer.addSeparatorComponents(
             new SeparatorBuilder()
         );
-
-        // =========================================
-        // DADOS
-        // =========================================
 
         logContainer.addTextDisplayComponents(
 
