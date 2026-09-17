@@ -15,65 +15,63 @@ const {
 
 const config = require("./config");
 
-// ==========================================
-// IDs DAS OPÇÕES
-// ==========================================
-
+// IDs das opções do menu
 const OWNAR = "cbda69e8d47d4bfacd52cc61947715da";
 const PARCERIA = "fe8064d9c3434287d0595be8a7375819";
 const DENUNCIA = "b270250acb7e4d07fcf7da4f4bff0024";
 const OUTROS = "0bbd775bc3454cb48519ba583feef317";
 
-// ==========================================
-// MENU
-// ==========================================
+
+// ===============================
+// MENU DE TICKETS
+// ===============================
 
 function criarMenuTickets() {
-
-    const menu = new StringSelectMenuBuilder()
-        .setCustomId("ticket_menu")
-        .setPlaceholder("Selecione uma opção")
-        .addOptions(
-            {
-                label: "Ownar",
-                value: OWNAR,
-                emoji: "👑",
-                description: "Solicitar um time ou seleção"
-            },
-            {
-                label: "Parceria",
-                value: PARCERIA,
-                emoji: "🤝",
-                description: "Enviar uma proposta de parceria"
-            },
-            {
-                label: "Denúncia",
-                value: DENUNCIA,
-                emoji: "🚨",
-                description: "Realizar uma denúncia"
-            },
-            {
-                label: "Outros",
-                value: OUTROS,
-                emoji: "❔",
-                description: "Outros assuntos"
-            }
-        );
-
-    return new ActionRowBuilder().addComponents(menu);
+    return new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+            .setCustomId("ticket_menu")
+            .setPlaceholder("Selecione uma opção...")
+            .addOptions(
+                {
+                    label: "Ownar",
+                    description: "Para ownar um time ou seleção",
+                    value: OWNAR,
+                    emoji: "👑"
+                },
+                {
+                    label: "Parceria",
+                    description: "Para propostas de parceria",
+                    value: PARCERIA,
+                    emoji: "🤝"
+                },
+                {
+                    label: "Denúncia",
+                    description: "Para realizar uma denúncia",
+                    value: DENUNCIA,
+                    emoji: "🚨"
+                },
+                {
+                    label: "Outros",
+                    description: "Para outros assuntos",
+                    value: OUTROS,
+                    emoji: "❔"
+                }
+            )
+    );
 }
 
-// ==========================================
-// PAINEL CV2
-// ==========================================
+
+// ===============================
+// PAINEL DE TICKETS
+// ===============================
 
 function criarPainelTickets() {
 
     const container = new ContainerBuilder()
-
         .addTextDisplayComponents(
-            new TextDisplayBuilder()
-                .setContent("# 🎫 Sistema de Tickets — UTL")
+            new TextDisplayBuilder().setContent(
+                "# 🎫 Sistema de Tickets — UTL"
+            )
         )
 
         .addSeparatorComponents(
@@ -81,16 +79,13 @@ function criarPainelTickets() {
         )
 
         .addTextDisplayComponents(
-            new TextDisplayBuilder()
-                .setContent(
-                    "Para facilitar o atendimento e manter tudo organizado, " +
-                    "o sistema de Tickets contará com quatro opções:\n\n" +
-
-                    "**👑 Ownar — Para Ownar um Time ou Seleção.**\n" +
-                    "**🤝 Parceria — Para propostas e assuntos relacionados a parcerias.**\n" +
-                    "**🚨 Denúncia — Para realizar denúncias ou relatar situações que precisam de análise.**\n" +
-                    "**📩 Outros — Para qualquer assunto que não se encaixe nas opções acima.**"
-                )
+            new TextDisplayBuilder().setContent(
+                "Para facilitar o atendimento e manter tudo organizado, o sistema de Tickets contará com quatro opções:\n\n" +
+                "**👑 Ownar — Para Ownar um Time ou Seleção.**\n" +
+                "**🤝 Parceria — Para propostas e assuntos relacionados a parcerias.**\n" +
+                "**🚨 Denúncia — Para realizar denúncias ou relatar situações que precisam de análise.**\n" +
+                "**📩 Outros — Para qualquer assunto que não se encaixe nas opções acima.**"
+            )
         )
 
         .addSeparatorComponents(
@@ -106,32 +101,35 @@ function criarPainelTickets() {
         )
 
         .addTextDisplayComponents(
-            new TextDisplayBuilder()
-                .setContent("-# UTL - TICKET SYSTEM")
+            new TextDisplayBuilder().setContent(
+                "-# UTL - TICKET SYSTEM"
+            )
         );
 
     return container;
 }
 
-// ==========================================
-// CRIAR TICKET
-// ==========================================
 
-async function criarTicket(interaction, tipo, informacoes = []) {
+// ===============================
+// CRIAR TICKET
+// ===============================
+
+async function criarTicket(interaction, tipo, informacoes = "") {
 
     const guild = interaction.guild;
     const user = interaction.user;
 
-    const nomeCanal = `${tipo}-${user.username}`
-        .toLowerCase()
-        .replace(/[^a-z0-9-_]/g, "")
-        .slice(0, 90);
+    let nomeTipo = tipo;
 
-    const canal = await guild.channels.create({
-        name: nomeCanal,
+    if (tipo === "ownar") nomeTipo = "Ownar";
+    if (tipo === "parceria") nomeTipo = "Parceria";
+    if (tipo === "denuncia") nomeTipo = "Denúncia";
+    if (tipo === "outros") nomeTipo = "Outros";
+
+    const channel = await guild.channels.create({
+        name: `${tipo}_${user.username}`.toLowerCase().replace(/[^a-z0-9_-]/g, ""),
         type: ChannelType.GuildText,
         parent: config.TICKET_CATEGORY_ID,
-
         permissionOverwrites: [
             {
                 id: guild.roles.everyone.id,
@@ -144,7 +142,8 @@ async function criarTicket(interaction, tipo, informacoes = []) {
                 allow: [
                     PermissionFlagsBits.ViewChannel,
                     PermissionFlagsBits.SendMessages,
-                    PermissionFlagsBits.ReadMessageHistory
+                    PermissionFlagsBits.ReadMessageHistory,
+                    PermissionFlagsBits.AttachFiles
                 ]
             },
             {
@@ -152,27 +151,19 @@ async function criarTicket(interaction, tipo, informacoes = []) {
                 allow: [
                     PermissionFlagsBits.ViewChannel,
                     PermissionFlagsBits.SendMessages,
-                    PermissionFlagsBits.ReadMessageHistory
+                    PermissionFlagsBits.ReadMessageHistory,
+                    PermissionFlagsBits.AttachFiles
                 ]
             }
         ]
     });
 
-    const textoInformacoes = informacoes.length
-        ? informacoes.join("\n\n")
-        : "Nenhuma informação adicional foi fornecida.";
-
-    // ==========================================
-    // INFORMAÇÕES
-    // ==========================================
-
+    // Container de informações
     const infoContainer = new ContainerBuilder()
-
         .addTextDisplayComponents(
-            new TextDisplayBuilder()
-                .setContent(
-                    `${user} <@&${config.STAFF_ROLE_ID}>`
-                )
+            new TextDisplayBuilder().setContent(
+                `${user} <@&${config.STAFF_ROLE_ID}>`
+            )
         )
 
         .addSeparatorComponents(
@@ -180,54 +171,38 @@ async function criarTicket(interaction, tipo, informacoes = []) {
         )
 
         .addTextDisplayComponents(
-            new TextDisplayBuilder()
-                .setContent("## 🎫 INFORMAÇÕES DO TICKET")
-        )
-
-        .addSeparatorComponents(
-            new SeparatorBuilder()
-        )
-
-        .addTextDisplayComponents(
-            new TextDisplayBuilder()
-                .setContent(textoInformacoes)
+            new TextDisplayBuilder().setContent(
+                "## 🎫 INFORMAÇÕES DO TICKET\n\n" +
+                `**Tipo:** ${nomeTipo}\n` +
+                `**Usuário:** ${user}\n\n` +
+                (informacoes ? `**Informações enviadas:**\n${informacoes}` : "")
+            )
         );
 
-    // ==========================================
-    // FECHAR TICKET
-    // ==========================================
-
+    // Container de fechamento
     const fecharContainer = new ContainerBuilder()
-
-        .addTextDisplayComponents(
-            new TextDisplayBuilder()
-                .setContent("## 🔒 ENCERRAMENTO DO TICKET")
-        )
-
         .addSeparatorComponents(
             new SeparatorBuilder()
         )
 
         .addTextDisplayComponents(
-            new TextDisplayBuilder()
-                .setContent(
-                    "Gostaria de fechar o ticket?"
-                )
+            new TextDisplayBuilder().setContent(
+                "## 🔒 ENCERRAMENTO DO TICKET\n\n" +
+                "Gostaria de fechar o ticket?"
+            )
         )
 
         .addActionRowComponents(
             new ActionRowBuilder().addComponents(
-
                 new ButtonBuilder()
                     .setCustomId("fechar_ticket")
                     .setLabel("Fechar Ticket")
                     .setEmoji("🔒")
                     .setStyle(ButtonStyle.Danger)
-
             )
         );
 
-    await canal.send({
+    await channel.send({
         components: [
             infoContainer,
             fecharContainer
@@ -235,152 +210,132 @@ async function criarTicket(interaction, tipo, informacoes = []) {
         flags: 32768
     });
 
-    return canal;
+    return channel;
 }
 
-// ==========================================
+
+// ===============================
 // MODAL — OWNAR
-// ==========================================
+// ===============================
 
 function modalOwnar() {
 
-    return new ModalBuilder()
+    const modal = new ModalBuilder()
         .setCustomId("modal_ownar")
-        .setTitle("👑 Solicitação de Ownar")
+        .setTitle("👑 Solicitação de Ownar");
 
-        .addComponents(
+    const time = new TextInputBuilder()
+        .setCustomId("time")
+        .setLabel("Qual time ou seleção você quer ownar?")
+        .setPlaceholder("Informe o nome do time ou seleção")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
 
-            new ActionRowBuilder().addComponents(
+    const squadsheet = new TextInputBuilder()
+        .setCustomId("squadsheet")
+        .setLabel("Squadsheet")
+        .setPlaceholder("Informe a Squadsheet")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
 
-                new TextInputBuilder()
-                    .setCustomId("time")
-                    .setLabel("O que você deseja?")
-                    .setPlaceholder(
-                        "Informe o time ou seleção que deseja ownar"
-                    )
-                    .setStyle(TextInputStyle.Paragraph)
-                    .setRequired(true)
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(time),
+        new ActionRowBuilder().addComponents(squadsheet)
+    );
 
-            ),
-
-            new ActionRowBuilder().addComponents(
-
-                new TextInputBuilder()
-                    .setCustomId("squadsheet")
-                    .setLabel("Squadsheet")
-                    .setPlaceholder(
-                        "Informe a Squadsheet"
-                    )
-                    .setStyle(TextInputStyle.Paragraph)
-                    .setRequired(true)
-
-            )
-
-        );
+    return modal;
 }
 
-// ==========================================
+
+// ===============================
 // MODAL — PARCERIA
-// ==========================================
+// ===============================
 
 function modalParceria() {
 
-    return new ModalBuilder()
+    const modal = new ModalBuilder()
         .setCustomId("modal_parceria")
-        .setTitle("🤝 Proposta de Parceria")
+        .setTitle("🤝 Proposta de Parceria");
 
-        .addComponents(
+    const parceria = new TextInputBuilder()
+        .setCustomId("parceria")
+        .setLabel("Texto da sua parceria")
+        .setPlaceholder("Explique sua proposta de parceria")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
 
-            new ActionRowBuilder().addComponents(
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(parceria)
+    );
 
-                new TextInputBuilder()
-                    .setCustomId("parceria")
-                    .setLabel("Texto da sua parceria")
-                    .setPlaceholder(
-                        "Descreva sua proposta de parceria"
-                    )
-                    .setStyle(TextInputStyle.Paragraph)
-                    .setRequired(true)
-
-            )
-
-        );
+    return modal;
 }
 
-// ==========================================
+
+// ===============================
 // MODAL — DENÚNCIA
-// ==========================================
+// ===============================
 
 function modalDenuncia() {
 
-    return new ModalBuilder()
+    const modal = new ModalBuilder()
         .setCustomId("modal_denuncia")
-        .setTitle("🚨 Denúncia")
+        .setTitle("🚨 Denúncia");
 
-        .addComponents(
+    const prova = new TextInputBuilder()
+        .setCustomId("prova")
+        .setLabel("Prova")
+        .setPlaceholder("Envie o link da imagem da prova")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
 
-            new ActionRowBuilder().addComponents(
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(prova)
+    );
 
-                new TextInputBuilder()
-                    .setCustomId("prova")
-                    .setLabel("Prova")
-                    .setPlaceholder(
-                        "Envie o link da imagem da prova"
-                    )
-                    .setStyle(TextInputStyle.Paragraph)
-                    .setRequired(true)
-
-            )
-
-        );
+    return modal;
 }
 
-// ==========================================
+
+// ===============================
 // MODAL — OUTROS
-// ==========================================
+// ===============================
 
 function modalOutros() {
 
-    return new ModalBuilder()
+    const modal = new ModalBuilder()
         .setCustomId("modal_outros")
-        .setTitle("❔ Outros")
+        .setTitle("❔ Outros");
 
-        .addComponents(
+    const assunto = new TextInputBuilder()
+        .setCustomId("assunto")
+        .setLabel("O que você deseja?")
+        .setPlaceholder("Informe brevemente o motivo do ticket")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
 
-            new ActionRowBuilder().addComponents(
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(assunto)
+    );
 
-                new TextInputBuilder()
-                    .setCustomId("assunto")
-                    .setLabel("O que você deseja?")
-                    .setPlaceholder(
-                        "Informe brevemente o motivo do ticket"
-                    )
-                    .setStyle(TextInputStyle.Paragraph)
-                    .setRequired(true)
-
-            )
-
-        );
+    return modal;
 }
 
-// ==========================================
-// EXPORTAR
-// ==========================================
+
+// ===============================
+// EXPORTS
+// ===============================
 
 module.exports = {
-
     criarTicket,
     criarMenuTickets,
     criarPainelTickets,
-
     modalOwnar,
     modalParceria,
     modalDenuncia,
     modalOutros,
-
     OWNAR,
     PARCERIA,
     DENUNCIA,
     OUTROS
-
 };
