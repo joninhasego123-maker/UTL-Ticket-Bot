@@ -153,6 +153,11 @@ function criarPainelTickets() {
 
 async function criarTicket(interaction, tipo, informacoes = "") {
 
+    // RESPONDE A INTERAÇÃO IMEDIATAMENTE
+    await interaction.deferReply({
+        ephemeral: true
+    });
+
     const guild = interaction.guild;
     const user = interaction.user;
 
@@ -216,6 +221,7 @@ async function criarTicket(interaction, tipo, informacoes = "") {
     let textoInformacoes = "";
 
     if (informacoes) {
+
         textoInformacoes =
             `\n**Informações enviadas:**\n${informacoes}`;
     }
@@ -293,6 +299,15 @@ async function criarTicket(interaction, tipo, informacoes = "") {
         ],
 
         flags: 32768
+    });
+
+
+    // ===============================
+    // RESPOSTA DA INTERAÇÃO
+    // ===============================
+
+    await interaction.editReply({
+        content: `✅ Ticket criado com sucesso: ${channel}`
     });
 
 
