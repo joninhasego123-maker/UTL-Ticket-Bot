@@ -16,7 +16,7 @@ const {
 const config = require("./config");
 
 // ==========================================
-// IDs DAS OPÇÕES DO MENU
+// IDs DAS OPÇÕES
 // ==========================================
 
 const OWNAR = "cbda69e8d47d4bfacd52cc61947715da";
@@ -25,7 +25,7 @@ const DENUNCIA = "b270250acb7e4d07fcf7da4f4bff0024";
 const OUTROS = "0bbd775bc3454cb48519ba583feef317";
 
 // ==========================================
-// MENU DE TICKETS
+// MENU
 // ==========================================
 
 function criarMenuTickets() {
@@ -135,25 +135,20 @@ async function criarTicket(interaction, tipo, informacoes = []) {
         permissionOverwrites: [
             {
                 id: guild.roles.everyone.id,
-
                 deny: [
                     PermissionFlagsBits.ViewChannel
                 ]
             },
-
             {
                 id: user.id,
-
                 allow: [
                     PermissionFlagsBits.ViewChannel,
                     PermissionFlagsBits.SendMessages,
                     PermissionFlagsBits.ReadMessageHistory
                 ]
             },
-
             {
                 id: config.STAFF_ROLE_ID,
-
                 allow: [
                     PermissionFlagsBits.ViewChannel,
                     PermissionFlagsBits.SendMessages,
@@ -168,7 +163,7 @@ async function criarTicket(interaction, tipo, informacoes = []) {
         : "Nenhuma informação adicional foi fornecida.";
 
     // ==========================================
-    // CONTAINER DAS INFORMAÇÕES
+    // INFORMAÇÕES
     // ==========================================
 
     const infoContainer = new ContainerBuilder()
@@ -199,7 +194,7 @@ async function criarTicket(interaction, tipo, informacoes = []) {
         );
 
     // ==========================================
-    // CONTAINER DE FECHAMENTO
+    // FECHAR TICKET
     // ==========================================
 
     const fecharContainer = new ContainerBuilder()
@@ -221,7 +216,6 @@ async function criarTicket(interaction, tipo, informacoes = []) {
         )
 
         .addActionRowComponents(
-
             new ActionRowBuilder().addComponents(
 
                 new ButtonBuilder()
@@ -231,22 +225,14 @@ async function criarTicket(interaction, tipo, informacoes = []) {
                     .setStyle(ButtonStyle.Danger)
 
             )
-
         );
 
-    // ==========================================
-    // ENVIAR OS COMPONENTS V2
-    // ==========================================
-
     await canal.send({
-
         components: [
             infoContainer,
             fecharContainer
         ],
-
         flags: 32768
-
     });
 
     return canal;
@@ -259,9 +245,7 @@ async function criarTicket(interaction, tipo, informacoes = []) {
 function modalOwnar() {
 
     return new ModalBuilder()
-
         .setCustomId("modal_ownar")
-
         .setTitle("👑 Solicitação de Ownar")
 
         .addComponents(
@@ -269,21 +253,12 @@ function modalOwnar() {
             new ActionRowBuilder().addComponents(
 
                 new TextInputBuilder()
-
                     .setCustomId("time")
-
-                    .setLabel(
-                        "Qual time ou seleção deseja ownar?"
-                    )
-
+                    .setLabel("O que você deseja?")
                     .setPlaceholder(
-                        "Digite o nome do time ou seleção"
+                        "Informe o time ou seleção que deseja ownar"
                     )
-
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-
+                    .setStyle(TextInputStyle.Paragraph)
                     .setRequired(true)
 
             ),
@@ -291,19 +266,12 @@ function modalOwnar() {
             new ActionRowBuilder().addComponents(
 
                 new TextInputBuilder()
-
                     .setCustomId("squadsheet")
-
                     .setLabel("Squadsheet")
-
                     .setPlaceholder(
                         "Informe a Squadsheet"
                     )
-
-                    .setStyle(
-                        TextInputStyle.Paragraph
-                    )
-
+                    .setStyle(TextInputStyle.Paragraph)
                     .setRequired(true)
 
             )
@@ -318,9 +286,7 @@ function modalOwnar() {
 function modalParceria() {
 
     return new ModalBuilder()
-
         .setCustomId("modal_parceria")
-
         .setTitle("🤝 Proposta de Parceria")
 
         .addComponents(
@@ -328,21 +294,12 @@ function modalParceria() {
             new ActionRowBuilder().addComponents(
 
                 new TextInputBuilder()
-
                     .setCustomId("parceria")
-
-                    .setLabel(
-                        "Texto da sua parceria"
-                    )
-
+                    .setLabel("Texto da sua parceria")
                     .setPlaceholder(
                         "Descreva sua proposta de parceria"
                     )
-
-                    .setStyle(
-                        TextInputStyle.Paragraph
-                    )
-
+                    .setStyle(TextInputStyle.Paragraph)
                     .setRequired(true)
 
             )
@@ -357,9 +314,7 @@ function modalParceria() {
 function modalDenuncia() {
 
     return new ModalBuilder()
-
         .setCustomId("modal_denuncia")
-
         .setTitle("🚨 Denúncia")
 
         .addComponents(
@@ -367,41 +322,12 @@ function modalDenuncia() {
             new ActionRowBuilder().addComponents(
 
                 new TextInputBuilder()
-
-                    .setCustomId("id_pessoa")
-
-                    .setLabel(
-                        "ID da pessoa que deseja denunciar"
-                    )
-
-                    .setPlaceholder(
-                        "Digite o ID do usuário"
-                    )
-
-                    .setStyle(
-                        TextInputStyle.Short
-                    )
-
-                    .setRequired(true)
-
-            ),
-
-            new ActionRowBuilder().addComponents(
-
-                new TextInputBuilder()
-
                     .setCustomId("prova")
-
                     .setLabel("Prova")
-
                     .setPlaceholder(
-                        "Informe a prova ou link da prova"
+                        "Envie o link da imagem da prova"
                     )
-
-                    .setStyle(
-                        TextInputStyle.Paragraph
-                    )
-
+                    .setStyle(TextInputStyle.Paragraph)
                     .setRequired(true)
 
             )
@@ -410,29 +336,51 @@ function modalDenuncia() {
 }
 
 // ==========================================
-// EXPORTAR FUNÇÕES
+// MODAL — OUTROS
+// ==========================================
+
+function modalOutros() {
+
+    return new ModalBuilder()
+        .setCustomId("modal_outros")
+        .setTitle("❔ Outros")
+
+        .addComponents(
+
+            new ActionRowBuilder().addComponents(
+
+                new TextInputBuilder()
+                    .setCustomId("assunto")
+                    .setLabel("O que você deseja?")
+                    .setPlaceholder(
+                        "Informe brevemente o motivo do ticket"
+                    )
+                    .setStyle(TextInputStyle.Paragraph)
+                    .setRequired(true)
+
+            )
+
+        );
+}
+
+// ==========================================
+// EXPORTAR
 // ==========================================
 
 module.exports = {
 
     criarTicket,
-
     criarMenuTickets,
-
     criarPainelTickets,
 
     modalOwnar,
-
     modalParceria,
-
     modalDenuncia,
+    modalOutros,
 
     OWNAR,
-
     PARCERIA,
-
     DENUNCIA,
-
     OUTROS
 
 };
