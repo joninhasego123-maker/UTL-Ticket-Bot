@@ -32,9 +32,9 @@ const {
     processarBotaoContrato
 } = require("./contract");
 
-// =====================================================
+// =============================================
 // CLIENT
-// =====================================================
+// =============================================
 
 const client = new Client({
     intents: [
@@ -44,9 +44,9 @@ const client = new Client({
     ]
 });
 
-// =====================================================
-// SERVIDOR HTTP - RENDER
-// =====================================================
+// =============================================
+// RENDER
+// =============================================
 
 const PORT = process.env.PORT || 3000;
 
@@ -62,11 +62,12 @@ server.listen(PORT, () => {
     console.log(`🌐 Servidor HTTP iniciado na porta ${PORT}`);
 });
 
-// =====================================================
-// BOT ONLINE
-// =====================================================
+// =============================================
+// READY
+// =============================================
 
 client.once("ready", async () => {
+
     console.log(`✅ Bot conectado como ${client.user.tag}`);
 
     const rest = new REST({
@@ -74,59 +75,93 @@ client.once("ready", async () => {
     }).setToken(config.TOKEN);
 
     try {
+
+        const commands = [
+            {
+                name: "ticket",
+                description: "Envia o painel de Tickets da UTL.",
+                default_member_permissions:
+                    PermissionFlagsBits.Administrator.toString()
+            },
+
+            ...contractCommands.map(command =>
+                command.toJSON()
+            )
+        ];
+
         await rest.put(
             Routes.applicationCommands(client.user.id),
             {
-                body: [
-                    {
-                        name: "ticket",
-                        description: "Envia o painel de Tickets da UTL.",
-                        default_member_permissions:
-                            PermissionFlagsBits.Administrator.toString()
-                    },
-
-                    ...contractCommands.map(command =>
-                        command.toJSON()
-                    )
-                ]
+                body: commands
             }
         );
 
-        console.log("✅ Comandos Slash registrados.");
+        console.log("✅ Comandos Slash registrados com sucesso.");
+
     } catch (error) {
-        console.error("❌ Erro ao registrar comandos:", error);
+
+        console.error(
+            "❌ Erro ao registrar comandos Slash:",
+            error
+        );
     }
 });
 
-// =====================================================
+// =============================================
 // INTERAÇÕES
-// =====================================================
+// =============================================
 
 client.on("interactionCreate", async interaction => {
 
     try {
 
-        // =============================================
-        // BOTÕES DE CONTRACT
-        // =============================================
+        // =========================================
+        // BOTÕES
+        // =========================================
 
         if (interaction.isButton()) {
-            const processed = await processarBotaoContrato(
-                interaction
-            );
 
-            if (processed) return;
+            // Contract
+            if (
+                interaction.customId.startsWith("contract_accept_") ||
+                interaction.customId.startsWith("contract_decline_")
+            ) {
+
+                await processarBotaoContrato(interaction);
+                return;
+            }
+
+            // Fechar ticket
+            if (
+                interaction.customId === "fechar_ticket"
+            ) {
+
+                await interaction.reply({
+                    content: "🔒 Este ticket será fechado...",
+                    ephemeral: true
+                });
+
+                setTimeout(async () => {
+
+                    await interaction.channel
+                        .delete()
+                        .catch(() => {});
+
+                }, 2000);
+
+                return;
+            }
         }
 
-        // =============================================
-        // COMANDOS SLASH
-        // =============================================
+        // =========================================
+        // SLASH COMMANDS
+        // =========================================
 
         if (interaction.isChatInputCommand()) {
 
-            // -------------------------
+            // =====================================
             // TICKET
-            // -------------------------
+            // =====================================
 
             if (interaction.commandName === "ticket") {
 
@@ -135,6 +170,7 @@ client.on("interactionCreate", async interaction => {
                         PermissionFlagsBits.Administrator
                     )
                 ) {
+
                     return interaction.reply({
                         content:
                             "❌ Você não possui permissão para usar este comando.",
@@ -147,6 +183,7 @@ client.on("interactionCreate", async interaction => {
                 );
 
                 if (!channel) {
+
                     return interaction.reply({
                         content:
                             "❌ Não encontrei o canal do painel de Tickets.",
@@ -155,7 +192,11 @@ client.on("interactionCreate", async interaction => {
                 }
 
                 await channel.send({
-                    components: [criarPainelTickets()],
+
+                    components: [
+                        criarPainelTickets()
+                    ],
+
                     files: [
                         {
                             attachment: path.join(
@@ -165,6 +206,7 @@ client.on("interactionCreate", async interaction => {
                             ),
                             name: "ticket_topo.png"
                         },
+
                         {
                             attachment: path.join(
                                 __dirname,
@@ -174,6 +216,7 @@ client.on("interactionCreate", async interaction => {
                             name: "utl_logo.png"
                         }
                     ],
+
                     flags: 32768
                 });
 
@@ -184,72 +227,92 @@ client.on("interactionCreate", async interaction => {
                 });
             }
 
-            // -------------------------
+            // =====================================
             // PERM
-            // -------------------------
+            // =====================================
 
             if (interaction.commandName === "perm") {
-                return executarPerm(interaction);
+
+                return executarPerm(
+                    interaction
+                );
             }
 
-            // -------------------------
+            // =====================================
             // UNPERM
-            // -------------------------
+            // =====================================
 
             if (interaction.commandName === "unperm") {
-                return executarUnperm(interaction);
+
+                return executarUnperm(
+                    interaction
+                );
             }
 
-            // -------------------------
+            // =====================================
             // CONTRACT
-            // -------------------------
+            // =====================================
 
             if (interaction.commandName === "contract") {
-                return executarContract(interaction);
+
+                return executarContract(
+                    interaction
+                );
             }
 
-            // -------------------------
+            // =====================================
             // RELEASE
-            // -------------------------
+            // =====================================
 
             if (interaction.commandName === "release") {
-                return executarRelease(interaction);
+
+                return executarRelease(
+                    interaction
+                );
             }
         }
 
-        // =============================================
-        // SELECT MENU DOS TICKETS
-        // =============================================
+        // =========================================
+        // MENU DE TICKETS
+        // =========================================
 
         if (interaction.isStringSelectMenu()) {
 
             if (
-                interaction.customId ===
-                "f82c784a00f548f1ee6b66c4d7383ae1"
+                interaction.customId === "ticket_menu"
             ) {
 
-                const value = interaction.values[0];
+                const value =
+                    interaction.values[0];
 
+                // OWNAR
                 if (value === OWNAR) {
+
                     return interaction.showModal(
                         modalOwnar()
                     );
                 }
 
+                // PARCERIA
                 if (value === PARCERIA) {
+
                     return interaction.showModal(
                         modalParceria()
                     );
                 }
 
+                // DENÚNCIA
                 if (value === DENUNCIA) {
+
                     return criarTicket(
                         interaction,
                         "denuncia"
                     );
                 }
 
+                // OUTROS
                 if (value === OUTROS) {
+
                     return interaction.showModal(
                         modalOutros()
                     );
@@ -257,16 +320,21 @@ client.on("interactionCreate", async interaction => {
             }
         }
 
-        // =============================================
-        // MODAIS DOS TICKETS
-        // =============================================
+        // =========================================
+        // MODAIS
+        // =========================================
 
         if (interaction.isModalSubmit()) {
 
-            if (interaction.customId === "modal_ownar") {
+            // OWNAR
+            if (
+                interaction.customId === "modal_ownar"
+            ) {
 
                 const time =
-                    interaction.fields.getTextInputValue("time");
+                    interaction.fields.getTextInputValue(
+                        "time"
+                    );
 
                 const squadsheet =
                     interaction.fields.getTextInputValue(
@@ -280,55 +348,39 @@ client.on("interactionCreate", async interaction => {
                 );
             }
 
-            if (interaction.customId === "modal_parceria") {
+            // PARCERIA
+            if (
+                interaction.customId === "modal_parceria"
+            ) {
 
-                const texto =
+                const parceria =
                     interaction.fields.getTextInputValue(
-                        "texto"
+                        "parceria"
                     );
 
                 return criarTicket(
                     interaction,
                     "parceria",
-                    texto
+                    parceria
                 );
             }
 
-            if (interaction.customId === "modal_outros") {
+            // OUTROS
+            if (
+                interaction.customId === "modal_outros"
+            ) {
 
-                const texto =
+                const assunto =
                     interaction.fields.getTextInputValue(
-                        "texto"
+                        "assunto"
                     );
 
                 return criarTicket(
                     interaction,
                     "outros",
-                    texto
+                    assunto
                 );
             }
-        }
-
-        // =============================================
-        // BOTÃO FECHAR TICKET
-        // =============================================
-
-        if (
-            interaction.isButton() &&
-            interaction.customId === "fechar_ticket"
-        ) {
-
-            await interaction.reply({
-                content:
-                    "🔒 Este ticket será fechado...",
-                ephemeral: true
-            });
-
-            setTimeout(async () => {
-                await interaction.channel.delete().catch(() => {});
-            }, 2000);
-
-            return;
         }
 
     } catch (error) {
@@ -338,7 +390,11 @@ client.on("interactionCreate", async interaction => {
             error
         );
 
-        if (!interaction.replied && !interaction.deferred) {
+        if (
+            !interaction.replied &&
+            !interaction.deferred
+        ) {
+
             await interaction.reply({
                 content:
                     "❌ Ocorreu um erro ao processar esta interação.",
@@ -348,8 +404,8 @@ client.on("interactionCreate", async interaction => {
     }
 });
 
-// =====================================================
+// =============================================
 // LOGIN
-// =====================================================
+// =============================================
 
 client.login(config.TOKEN);
