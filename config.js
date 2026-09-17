@@ -1,0 +1,7 @@
+module.exports = {
+    TOKEN: process.env.TOKEN,
+
+    TICKET_CATEGORY_ID: "1543584539467587585",
+
+    STAFF_ROLE_ID: "1543595314576101447"
+};
