@@ -8,6 +8,7 @@ const {
 } = require("discord.js");
 
 const http = require("http");
+const path = require("path");
 
 const config = require("./config");
 
@@ -16,74 +17,104 @@ const {
     criarPainelTickets,
     modalOwnar,
     modalParceria,
-    modalDenuncia,
+    modalOutros,
     OWNAR,
     PARCERIA,
     DENUNCIA,
     OUTROS
 } = require("./ticket");
 
+
+// ===============================
+// CLIENT
+// ===============================
+
 const client = new Client({
+
     intents: [
         GatewayIntentBits.Guilds
     ]
+
 });
 
-// ==========================================
-// SERVIDOR HTTP PARA O RENDER
-// ==========================================
+
+// ===============================
+// SERVIDOR HTTP — RENDER
+// ===============================
 
 const PORT = process.env.PORT || 3000;
 
 http.createServer((req, res) => {
 
-    res.writeHead(200, {
-        "Content-Type": "text/plain"
-    });
+    res.writeHead(200);
 
-    res.end("UTL Ticket Bot está online.");
+    res.end("Bot online!");
 
 }).listen(PORT, () => {
 
-    console.log(`🌐 Servidor HTTP iniciado na porta ${PORT}`);
+    console.log(
+        `🌐 Servidor HTTP iniciado na porta ${PORT}`
+    );
 
 });
 
-// ==========================================
-// COMANDO /TICKET
-// ==========================================
 
-const comandoTicket = new SlashCommandBuilder()
-    .setName("ticket")
-    .setDescription("Envia o painel de tickets da UTL")
-    .setDefaultMemberPermissions(
-        PermissionFlagsBits.Administrator.toString()
-    );
-
-const rest = new REST({
-    version: "10"
-}).setToken(config.TOKEN);
-
-// ==========================================
-// BOT ONLINE
-// ==========================================
+// ===============================
+// READY
+// ===============================
 
 client.once("ready", async () => {
 
-    console.log(`✅ Bot conectado como ${client.user.tag}`);
+    console.log(
+        `✅ Bot conectado como ${client.user.tag}`
+    );
+
+
+    // ===============================
+    // REGISTRAR /TICKET
+    // ===============================
+
+    const commands = [
+
+        new SlashCommandBuilder()
+
+            .setName("ticket")
+
+            .setDescription(
+                "Envia o painel de tickets da UTL"
+            )
+
+            .setDefaultMemberPermissions(
+                PermissionFlagsBits.Administrator
+            )
+
+            .toJSON()
+
+    ];
+
+
+    const rest = new REST({
+        version: "10"
+    }).setToken(config.TOKEN);
+
 
     try {
 
         await rest.put(
-            Routes.applicationCommands(client.user.id),
+
+            Routes.applicationCommands(
+                client.user.id
+            ),
+
             {
-                body: [
-                    comandoTicket.toJSON()
-                ]
+                body: commands
             }
+
         );
 
-        console.log("✅ Comando /ticket registrado.");
+        console.log(
+            "✅ Comando /ticket registrado"
+        );
 
     } catch (error) {
 
@@ -96,196 +127,296 @@ client.once("ready", async () => {
 
 });
 
-// ==========================================
+
+// ===============================
 // INTERAÇÕES
-// ==========================================
+// ===============================
 
 client.on("interactionCreate", async (interaction) => {
 
     try {
 
-        // ==========================================
+
+        // ===============================
         // /TICKET
-        // ==========================================
+        // ===============================
 
-        if (interaction.isChatInputCommand()) {
+        if (
+            interaction.isChatInputCommand() &&
+            interaction.commandName === "ticket"
+        ) {
 
-            if (interaction.commandName !== "ticket") return;
+            const canal = await client.channels.fetch(
+                config.TICKET_PANEL_CHANNEL_ID
+            );
 
-            const canal =
-                await client.channels.fetch(
-                    config.TICKET_PANEL_CHANNEL_ID
-                );
 
             if (!canal) {
 
                 return interaction.reply({
-                    content: "❌ O canal do painel não foi encontrado.",
+
+                    content:
+                        "❌ Não encontrei o canal do painel.",
+
                     ephemeral: true
+
                 });
 
             }
 
+
             await canal.send({
+
                 components: [
                     criarPainelTickets()
                 ],
+
+                files: [
+
+                    {
+                        attachment: path.join(
+                            __dirname,
+                            "imagens",
+                            "ticket_topo.png"
+                        ),
+
+                        name: "ticket_topo.png"
+                    },
+
+                    {
+                        attachment: path.join(
+                            __dirname,
+                            "imagens",
+                            "utl_logo.png"
+                        ),
+
+                        name: "utl_logo.png"
+                    }
+
+                ],
+
                 flags: 32768
+
             });
+
 
             return interaction.reply({
-                content: `✅ Painel de tickets enviado em ${canal}.`,
+
+                content:
+                    "✅ Painel de tickets enviado!",
+
                 ephemeral: true
+
             });
+
         }
 
-        // ==========================================
-        // SELECT MENU
-        // ==========================================
 
-        if (interaction.isStringSelectMenu()) {
+        // ===============================
+        // MENU DE TICKETS
+        // ===============================
 
-            if (interaction.customId !== "ticket_menu") return;
+        if (
+            interaction.isStringSelectMenu() &&
+            interaction.customId === "ticket_menu"
+        ) {
+
 
             const escolha = interaction.values[0];
 
+
+            // ===============================
+            // OWNAR
+            // ===============================
+
             if (escolha === OWNAR) {
+
                 return interaction.showModal(
                     modalOwnar()
                 );
+
             }
 
+
+            // ===============================
+            // PARCERIA
+            // ===============================
+
             if (escolha === PARCERIA) {
+
                 return interaction.showModal(
                     modalParceria()
                 );
+
             }
+
+
+            // ===============================
+            // DENÚNCIA
+            // ===============================
 
             if (escolha === DENUNCIA) {
-                return interaction.showModal(
-                    modalDenuncia()
-                );
-            }
-
-            if (escolha === OUTROS) {
-
-                await interaction.deferReply({
-                    ephemeral: true
-                });
 
                 const canal = await criarTicket(
                     interaction,
-                    "outros"
+                    "denuncia"
                 );
 
-                return interaction.editReply({
-                    content: `✅ Seu ticket foi criado: ${canal}`
+
+                return interaction.reply({
+
+                    content:
+                        `🚨 Denúncia criada: ${canal}`,
+
+                    ephemeral: true
+
                 });
+
             }
+
+
+            // ===============================
+            // OUTROS
+            // ===============================
+
+            if (escolha === OUTROS) {
+
+                return interaction.showModal(
+                    modalOutros()
+                );
+
+            }
+
         }
 
-        // ==========================================
-        // MODAL — OWNAR
-        // ==========================================
+
+        // ===============================
+        // MODAL OWNAR
+        // ===============================
 
         if (
             interaction.isModalSubmit() &&
             interaction.customId === "modal_ownar"
         ) {
 
-            await interaction.deferReply({
-                ephemeral: true
-            });
-
             const time =
-                interaction.fields.getTextInputValue("time");
+                interaction.fields.getTextInputValue(
+                    "time"
+                );
 
             const squadsheet =
-                interaction.fields.getTextInputValue("squadsheet");
+                interaction.fields.getTextInputValue(
+                    "squadsheet"
+                );
+
+
+            const informacoes =
+                `**Qual time ou seleção deseja ownar:**\n${time}\n\n` +
+                `**Squadsheet:**\n${squadsheet}`;
+
 
             const canal = await criarTicket(
+
                 interaction,
+
                 "ownar",
-                [
-                    `### 👑 Qual time ou seleção deseja ownar?\n${time}`,
-                    `### 📋 Squadsheet\n${squadsheet}`
-                ]
+
+                informacoes
+
             );
 
-            return interaction.editReply({
-                content: `✅ Seu ticket foi criado: ${canal}`
+
+            return interaction.reply({
+
+                content:
+                    `👑 Ticket de Ownar criado: ${canal}`,
+
+                ephemeral: true
+
             });
+
         }
 
-        // ==========================================
-        // MODAL — PARCERIA
-        // ==========================================
+
+        // ===============================
+        // MODAL PARCERIA
+        // ===============================
 
         if (
             interaction.isModalSubmit() &&
             interaction.customId === "modal_parceria"
         ) {
 
-            await interaction.deferReply({
-                ephemeral: true
-            });
-
             const parceria =
-                interaction.fields.getTextInputValue("parceria");
+                interaction.fields.getTextInputValue(
+                    "parceria"
+                );
+
 
             const canal = await criarTicket(
+
                 interaction,
+
                 "parceria",
-                [
-                    `### 🤝 Proposta de Parceria\n${parceria}`
-                ]
+
+                parceria
+
             );
 
-            return interaction.editReply({
-                content: `✅ Seu ticket foi criado: ${canal}`
+
+            return interaction.reply({
+
+                content:
+                    `🤝 Ticket de parceria criado: ${canal}`,
+
+                ephemeral: true
+
             });
+
         }
 
-        // ==========================================
-        // MODAL — DENÚNCIA
-        // ==========================================
+
+        // ===============================
+        // MODAL OUTROS
+        // ===============================
 
         if (
             interaction.isModalSubmit() &&
-            interaction.customId === "modal_denuncia"
+            interaction.customId === "modal_outros"
         ) {
 
-            await interaction.deferReply({
-                ephemeral: true
-            });
-
-            const idPessoa =
+            const assunto =
                 interaction.fields.getTextInputValue(
-                    "id_pessoa"
+                    "assunto"
                 );
 
-            const prova =
-                interaction.fields.getTextInputValue(
-                    "prova"
-                );
 
             const canal = await criarTicket(
+
                 interaction,
-                "denuncia",
-                [
-                    `### 🚨 ID da pessoa denunciada\n${idPessoa}`,
-                    `### 📎 Prova\n${prova}`
-                ]
+
+                "outros",
+
+                assunto
+
             );
 
-            return interaction.editReply({
-                content: `✅ Seu ticket foi criado: ${canal}`
+
+            return interaction.reply({
+
+                content:
+                    `❔ Ticket criado: ${canal}`,
+
+                ephemeral: true
+
             });
+
         }
 
-        // ==========================================
+
+        // ===============================
         // FECHAR TICKET
-        // ==========================================
+        // ===============================
 
         if (
             interaction.isButton() &&
@@ -293,9 +424,14 @@ client.on("interactionCreate", async (interaction) => {
         ) {
 
             await interaction.reply({
-                content: "🔒 Este ticket será encerrado.",
+
+                content:
+                    "🔒 Este ticket será fechado em 2 segundos.",
+
                 ephemeral: true
+
             });
+
 
             setTimeout(async () => {
 
@@ -313,7 +449,9 @@ client.on("interactionCreate", async (interaction) => {
                 }
 
             }, 2000);
+
         }
+
 
     } catch (error) {
 
@@ -322,22 +460,27 @@ client.on("interactionCreate", async (interaction) => {
             error
         );
 
-        if (
-            !interaction.replied &&
-            !interaction.deferred
-        ) {
+
+        if (!interaction.replied && !interaction.deferred) {
 
             await interaction.reply({
-                content: "❌ Ocorreu um erro ao processar esta ação.",
+
+                content:
+                    "❌ Ocorreu um erro ao processar essa ação.",
+
                 ephemeral: true
+
             });
 
         }
+
     }
+
 });
 
-// ==========================================
+
+// ===============================
 // LOGIN
-// ==========================================
+// ===============================
 
 client.login(config.TOKEN);
