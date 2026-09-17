@@ -1,6 +1,10 @@
 const {
     Client,
-    GatewayIntentBits
+    GatewayIntentBits,
+    REST,
+    Routes,
+    SlashCommandBuilder,
+    PermissionFlagsBits
 } = require("discord.js");
 
 const http = require("http");
@@ -9,6 +13,7 @@ const config = require("./config");
 
 const {
     criarTicket,
+    criarPainelTickets,
     modalOwnar,
     modalParceria,
     modalDenuncia,
@@ -24,41 +29,119 @@ const client = new Client({
     ]
 });
 
-// ==========================
-// SERVIDOR PARA O RENDER
-// ==========================
+// ==========================================
+// SERVIDOR HTTP PARA O RENDER
+// ==========================================
 
 const PORT = process.env.PORT || 3000;
 
 http.createServer((req, res) => {
+
     res.writeHead(200, {
         "Content-Type": "text/plain"
     });
 
     res.end("UTL Ticket Bot está online.");
+
 }).listen(PORT, () => {
+
     console.log(`🌐 Servidor HTTP iniciado na porta ${PORT}`);
+
 });
 
-// ==========================
-// BOT DISCORD
-// ==========================
+// ==========================================
+// COMANDO /TICKET
+// ==========================================
 
-client.once("ready", () => {
+const comandoTicket = new SlashCommandBuilder()
+    .setName("ticket")
+    .setDescription("Envia o painel de tickets da UTL")
+    .setDefaultMemberPermissions(
+        PermissionFlagsBits.Administrator.toString()
+    );
+
+const rest = new REST({
+    version: "10"
+}).setToken(config.TOKEN);
+
+// ==========================================
+// BOT ONLINE
+// ==========================================
+
+client.once("ready", async () => {
+
     console.log(`✅ Bot conectado como ${client.user.tag}`);
+
+    try {
+
+        await rest.put(
+            Routes.applicationCommands(client.user.id),
+            {
+                body: [
+                    comandoTicket.toJSON()
+                ]
+            }
+        );
+
+        console.log("✅ Comando /ticket registrado.");
+
+    } catch (error) {
+
+        console.error(
+            "❌ Erro ao registrar /ticket:",
+            error
+        );
+
+    }
+
 });
 
-// ==========================
+// ==========================================
 // INTERAÇÕES
-// ==========================
+// ==========================================
 
 client.on("interactionCreate", async (interaction) => {
 
     try {
 
-        // ==========================
+        // ==========================================
+        // /TICKET
+        // ==========================================
+
+        if (interaction.isChatInputCommand()) {
+
+            if (interaction.commandName !== "ticket") return;
+
+            const canal =
+                await client.channels.fetch(
+                    config.TICKET_PANEL_CHANNEL_ID
+                );
+
+            if (!canal) {
+
+                return interaction.reply({
+                    content: "❌ O canal do painel não foi encontrado.",
+                    ephemeral: true
+                });
+
+            }
+
+            await canal.send({
+                components: [
+                    criarPainelTickets()
+                ],
+                flags: 32768
+            });
+
+            return interaction.reply({
+                content: `✅ Painel de tickets enviado em ${canal}.`,
+                ephemeral: true
+            });
+        }
+
+        // ==========================================
         // SELECT MENU
-        // ==========================
+        // ==========================================
 
         if (interaction.isStringSelectMenu()) {
 
@@ -67,15 +150,21 @@ client.on("interactionCreate", async (interaction) => {
             const escolha = interaction.values[0];
 
             if (escolha === OWNAR) {
-                return interaction.showModal(modalOwnar());
+                return interaction.showModal(
+                    modalOwnar()
+                );
             }
 
             if (escolha === PARCERIA) {
-                return interaction.showModal(modalParceria());
+                return interaction.showModal(
+                    modalParceria()
+                );
             }
 
             if (escolha === DENUNCIA) {
-                return interaction.showModal(modalDenuncia());
+                return interaction.showModal(
+                    modalDenuncia()
+                );
             }
 
             if (escolha === OUTROS) {
@@ -95,9 +184,9 @@ client.on("interactionCreate", async (interaction) => {
             }
         }
 
-        // ==========================
+        // ==========================================
         // MODAL — OWNAR
-        // ==========================
+        // ==========================================
 
         if (
             interaction.isModalSubmit() &&
@@ -128,9 +217,9 @@ client.on("interactionCreate", async (interaction) => {
             });
         }
 
-        // ==========================
+        // ==========================================
         // MODAL — PARCERIA
-        // ==========================
+        // ==========================================
 
         if (
             interaction.isModalSubmit() &&
@@ -157,9 +246,9 @@ client.on("interactionCreate", async (interaction) => {
             });
         }
 
-        // ==========================
+        // ==========================================
         // MODAL — DENÚNCIA
-        // ==========================
+        // ==========================================
 
         if (
             interaction.isModalSubmit() &&
@@ -171,10 +260,14 @@ client.on("interactionCreate", async (interaction) => {
             });
 
             const idPessoa =
-                interaction.fields.getTextInputValue("id_pessoa");
+                interaction.fields.getTextInputValue(
+                    "id_pessoa"
+                );
 
             const prova =
-                interaction.fields.getTextInputValue("prova");
+                interaction.fields.getTextInputValue(
+                    "prova"
+                );
 
             const canal = await criarTicket(
                 interaction,
@@ -190,9 +283,9 @@ client.on("interactionCreate", async (interaction) => {
             });
         }
 
-        // ==========================
+        // ==========================================
         // FECHAR TICKET
-        // ==========================
+        // ==========================================
 
         if (
             interaction.isButton() &&
@@ -207,12 +300,16 @@ client.on("interactionCreate", async (interaction) => {
             setTimeout(async () => {
 
                 try {
+
                     await interaction.channel.delete();
+
                 } catch (error) {
+
                     console.error(
-                        "Erro ao fechar ticket:",
+                        "❌ Erro ao fechar ticket:",
                         error
                     );
+
                 }
 
             }, 2000);
@@ -220,7 +317,10 @@ client.on("interactionCreate", async (interaction) => {
 
     } catch (error) {
 
-        console.error("❌ Erro na interação:", error);
+        console.error(
+            "❌ Erro na interação:",
+            error
+        );
 
         if (
             !interaction.replied &&
@@ -236,8 +336,8 @@ client.on("interactionCreate", async (interaction) => {
     }
 });
 
-// ==========================
+// ==========================================
 // LOGIN
-// ==========================
+// ==========================================
 
 client.login(config.TOKEN);
