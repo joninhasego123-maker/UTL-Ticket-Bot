@@ -10,12 +10,15 @@ const {
     PermissionFlagsBits,
     ContainerBuilder,
     TextDisplayBuilder,
-    SeparatorBuilder
+    SeparatorBuilder,
+    SectionBuilder,
+    ThumbnailBuilder,
+    MediaGalleryBuilder,
+    MediaGalleryItemBuilder
 } = require("discord.js");
 
 const config = require("./config");
 
-// IDs das opções do menu
 const OWNAR = "cbda69e8d47d4bfacd52cc61947715da";
 const PARCERIA = "fe8064d9c3434287d0595be8a7375819";
 const DENUNCIA = "b270250acb7e4d07fcf7da4f4bff0024";
@@ -23,14 +26,17 @@ const OUTROS = "0bbd775bc3454cb48519ba583feef317";
 
 
 // ===============================
-// MENU DE TICKETS
+// MENU
 // ===============================
 
 function criarMenuTickets() {
+
     return new ActionRowBuilder().addComponents(
+
         new StringSelectMenuBuilder()
             .setCustomId("ticket_menu")
             .setPlaceholder("Selecione uma opção...")
+
             .addOptions(
                 {
                     label: "Ownar",
@@ -38,18 +44,21 @@ function criarMenuTickets() {
                     value: OWNAR,
                     emoji: "👑"
                 },
+
                 {
                     label: "Parceria",
                     description: "Para propostas de parceria",
                     value: PARCERIA,
                     emoji: "🤝"
                 },
+
                 {
                     label: "Denúncia",
                     description: "Para realizar uma denúncia",
                     value: DENUNCIA,
                     emoji: "🚨"
                 },
+
                 {
                     label: "Outros",
                     description: "Para outros assuntos",
@@ -62,17 +71,42 @@ function criarMenuTickets() {
 
 
 // ===============================
-// PAINEL DE TICKETS
+// PAINEL
 // ===============================
 
 function criarPainelTickets() {
 
-    const container = new ContainerBuilder()
+    const imagemTopo = new MediaGalleryBuilder()
+        .addItems(
+            new MediaGalleryItemBuilder()
+                .setURL("attachment://ticket_topo.png")
+        );
+
+
+    const titulo = new SectionBuilder()
+
         .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(
-                "# 🎫 Sistema de Tickets — UTL"
-            )
+            new TextDisplayBuilder()
+                .setContent("# 🎫 Sistema de Tickets — UTL")
         )
+
+        .setThumbnailAccessory(
+            new ThumbnailBuilder()
+                .setURL("attachment://utl_logo.png")
+        );
+
+
+    const container = new ContainerBuilder()
+
+        // IMAGEM TICKETS NO TOPO
+        .addMediaGalleryComponents(imagemTopo)
+
+        .addSeparatorComponents(
+            new SeparatorBuilder()
+        )
+
+        // TÍTULO + LOGO AO LADO
+        .addSectionComponents(titulo)
 
         .addSeparatorComponents(
             new SeparatorBuilder()
@@ -81,9 +115,13 @@ function criarPainelTickets() {
         .addTextDisplayComponents(
             new TextDisplayBuilder().setContent(
                 "Para facilitar o atendimento e manter tudo organizado, o sistema de Tickets contará com quatro opções:\n\n" +
+
                 "**👑 Ownar — Para Ownar um Time ou Seleção.**\n" +
+
                 "**🤝 Parceria — Para propostas e assuntos relacionados a parcerias.**\n" +
+
                 "**🚨 Denúncia — Para realizar denúncias ou relatar situações que precisam de análise.**\n" +
+
                 "**📩 Outros — Para qualquer assunto que não se encaixe nas opções acima.**"
             )
         )
@@ -101,9 +139,8 @@ function criarPainelTickets() {
         )
 
         .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(
-                "-# UTL - TICKET SYSTEM"
-            )
+            new TextDisplayBuilder()
+                .setContent("-# UTL - TICKET SYSTEM")
         );
 
     return container;
@@ -126,19 +163,30 @@ async function criarTicket(interaction, tipo, informacoes = "") {
     if (tipo === "denuncia") nomeTipo = "Denúncia";
     if (tipo === "outros") nomeTipo = "Outros";
 
+
     const channel = await guild.channels.create({
-        name: `${tipo}_${user.username}`.toLowerCase().replace(/[^a-z0-9_-]/g, ""),
+
+        name: `${tipo}_${user.username}`
+            .toLowerCase()
+            .replace(/[^a-z0-9_-]/g, ""),
+
         type: ChannelType.GuildText,
+
         parent: config.TICKET_CATEGORY_ID,
+
         permissionOverwrites: [
+
             {
                 id: guild.roles.everyone.id,
+
                 deny: [
                     PermissionFlagsBits.ViewChannel
                 ]
             },
+
             {
                 id: user.id,
+
                 allow: [
                     PermissionFlagsBits.ViewChannel,
                     PermissionFlagsBits.SendMessages,
@@ -146,8 +194,10 @@ async function criarTicket(interaction, tipo, informacoes = "") {
                     PermissionFlagsBits.AttachFiles
                 ]
             },
+
             {
                 id: config.STAFF_ROLE_ID,
+
                 allow: [
                     PermissionFlagsBits.ViewChannel,
                     PermissionFlagsBits.SendMessages,
@@ -158,12 +208,34 @@ async function criarTicket(interaction, tipo, informacoes = "") {
         ]
     });
 
-    // Container de informações
+
+    // ===============================
+    // INFORMAÇÕES
+    // ===============================
+
+    let textoInformacoes = "";
+
+    if (informacoes) {
+        textoInformacoes =
+            `\n**Informações enviadas:**\n${informacoes}`;
+    }
+
+
+    if (tipo === "denuncia") {
+
+        textoInformacoes =
+            "\n**Envie a imagem da prova neste canal.**\n" +
+            "Anexe a imagem diretamente na sua próxima mensagem.";
+    }
+
+
     const infoContainer = new ContainerBuilder()
+
         .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(
-                `${user} <@&${config.STAFF_ROLE_ID}>`
-            )
+            new TextDisplayBuilder()
+                .setContent(
+                    `${user} <@&${config.STAFF_ROLE_ID}>`
+                )
         )
 
         .addSeparatorComponents(
@@ -171,51 +243,65 @@ async function criarTicket(interaction, tipo, informacoes = "") {
         )
 
         .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(
-                "## 🎫 INFORMAÇÕES DO TICKET\n\n" +
-                `**Tipo:** ${nomeTipo}\n` +
-                `**Usuário:** ${user}\n\n` +
-                (informacoes ? `**Informações enviadas:**\n${informacoes}` : "")
-            )
+            new TextDisplayBuilder()
+                .setContent(
+                    `## 🎫 INFORMAÇÕES DO TICKET\n\n` +
+                    `**Tipo:** ${nomeTipo}\n` +
+                    `**Usuário:** ${user}\n` +
+                    textoInformacoes
+                )
         );
 
-    // Container de fechamento
+
+    // ===============================
+    // FECHAR TICKET
+    // ===============================
+
     const fecharContainer = new ContainerBuilder()
+
         .addSeparatorComponents(
             new SeparatorBuilder()
         )
 
         .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(
-                "## 🔒 ENCERRAMENTO DO TICKET\n\n" +
-                "Gostaria de fechar o ticket?"
-            )
+            new TextDisplayBuilder()
+                .setContent(
+                    "## 🔒 ENCERRAMENTO DO TICKET\n\n" +
+                    "Gostaria de fechar o ticket?"
+                )
         )
 
         .addActionRowComponents(
+
             new ActionRowBuilder().addComponents(
+
                 new ButtonBuilder()
                     .setCustomId("fechar_ticket")
                     .setLabel("Fechar Ticket")
                     .setEmoji("🔒")
                     .setStyle(ButtonStyle.Danger)
+
             )
         );
 
+
     await channel.send({
+
         components: [
             infoContainer,
             fecharContainer
         ],
+
         flags: 32768
     });
+
 
     return channel;
 }
 
 
 // ===============================
-// MODAL — OWNAR
+// MODAL OWNAR
 // ===============================
 
 function modalOwnar() {
@@ -224,12 +310,14 @@ function modalOwnar() {
         .setCustomId("modal_ownar")
         .setTitle("👑 Solicitação de Ownar");
 
+
     const time = new TextInputBuilder()
         .setCustomId("time")
         .setLabel("Qual time ou seleção você quer ownar?")
         .setPlaceholder("Informe o nome do time ou seleção")
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
+
 
     const squadsheet = new TextInputBuilder()
         .setCustomId("squadsheet")
@@ -238,17 +326,24 @@ function modalOwnar() {
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
+
     modal.addComponents(
-        new ActionRowBuilder().addComponents(time),
-        new ActionRowBuilder().addComponents(squadsheet)
+
+        new ActionRowBuilder()
+            .addComponents(time),
+
+        new ActionRowBuilder()
+            .addComponents(squadsheet)
+
     );
+
 
     return modal;
 }
 
 
 // ===============================
-// MODAL — PARCERIA
+// MODAL PARCERIA
 // ===============================
 
 function modalParceria() {
@@ -257,6 +352,7 @@ function modalParceria() {
         .setCustomId("modal_parceria")
         .setTitle("🤝 Proposta de Parceria");
 
+
     const parceria = new TextInputBuilder()
         .setCustomId("parceria")
         .setLabel("Texto da sua parceria")
@@ -264,41 +360,21 @@ function modalParceria() {
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
+
     modal.addComponents(
-        new ActionRowBuilder().addComponents(parceria)
+
+        new ActionRowBuilder()
+            .addComponents(parceria)
+
     );
+
 
     return modal;
 }
 
 
 // ===============================
-// MODAL — DENÚNCIA
-// ===============================
-
-function modalDenuncia() {
-
-    const modal = new ModalBuilder()
-        .setCustomId("modal_denuncia")
-        .setTitle("🚨 Denúncia");
-
-    const prova = new TextInputBuilder()
-        .setCustomId("prova")
-        .setLabel("Prova")
-        .setPlaceholder("Envie o link da imagem da prova")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
-
-    modal.addComponents(
-        new ActionRowBuilder().addComponents(prova)
-    );
-
-    return modal;
-}
-
-
-// ===============================
-// MODAL — OUTROS
+// MODAL OUTROS
 // ===============================
 
 function modalOutros() {
@@ -307,6 +383,7 @@ function modalOutros() {
         .setCustomId("modal_outros")
         .setTitle("❔ Outros");
 
+
     const assunto = new TextInputBuilder()
         .setCustomId("assunto")
         .setLabel("O que você deseja?")
@@ -314,9 +391,14 @@ function modalOutros() {
         .setStyle(TextInputStyle.Paragraph)
         .setRequired(true);
 
+
     modal.addComponents(
-        new ActionRowBuilder().addComponents(assunto)
+
+        new ActionRowBuilder()
+            .addComponents(assunto)
+
     );
+
 
     return modal;
 }
@@ -327,13 +409,15 @@ function modalOutros() {
 // ===============================
 
 module.exports = {
+
     criarTicket,
     criarMenuTickets,
     criarPainelTickets,
+
     modalOwnar,
     modalParceria,
-    modalDenuncia,
     modalOutros,
+
     OWNAR,
     PARCERIA,
     DENUNCIA,
