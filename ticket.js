@@ -15,13 +15,104 @@ const {
 
 const config = require("./config");
 
-// IDs do Select Menu
+// IDs das opções
 const OWNAR = "cbda69e8d47d4bfacd52cc61947715da";
 const PARCERIA = "fe8064d9c3434287d0595be8a7375819";
 const DENUNCIA = "b270250acb7e4d07fcf7da4f4bff0024";
 const OUTROS = "0bbd775bc3454cb48519ba583feef317";
 
-// Cria o canal do ticket
+// ==========================================
+// MENU DE TICKETS
+// ==========================================
+
+function criarMenuTickets() {
+
+    const menu = new StringSelectMenuBuilder()
+        .setCustomId("ticket_menu")
+        .setPlaceholder("Selecione uma opção")
+        .addOptions(
+            {
+                label: "Ownar",
+                value: OWNAR,
+                emoji: "👑",
+                description: "Solicitar um time ou seleção"
+            },
+            {
+                label: "Parceria",
+                value: PARCERIA,
+                emoji: "🤝",
+                description: "Enviar uma proposta de parceria"
+            },
+            {
+                label: "Denúncia",
+                value: DENUNCIA,
+                emoji: "🚨",
+                description: "Realizar uma denúncia"
+            },
+            {
+                label: "Outros",
+                value: OUTROS,
+                emoji: "❔",
+                description: "Outros assuntos"
+            }
+        );
+
+    return new ActionRowBuilder().addComponents(menu);
+}
+
+// ==========================================
+// PAINEL CV2
+// ==========================================
+
+function criarPainelTickets() {
+
+    const container = new ContainerBuilder()
+        .addTextDisplayComponents(
+            new TextDisplayBuilder()
+                .setContent("# 🎫 Sistema de Tickets — UTL")
+        )
+
+        .addSeparatorComponents(
+            new SeparatorBuilder()
+        )
+
+        .addTextDisplayComponents(
+            new TextDisplayBuilder()
+                .setContent(
+                    "Para facilitar o atendimento e manter tudo organizado, " +
+                    "o sistema de Tickets contará com quatro opções:\n\n" +
+
+                    "**👑 Ownar — Para Ownar um Time ou Seleção.**\n" +
+                    "**🤝 Parceria — Para propostas e assuntos relacionados a parcerias.**\n" +
+                    "**🚨 Denúncia — Para realizar denúncias ou relatar situações que precisam de análise.**\n" +
+                    "**📩 Outros — Para qualquer assunto que não se encaixe nas opções acima.**"
+                )
+        )
+
+        .addSeparatorComponents(
+            new SeparatorBuilder()
+        )
+
+        .addActionRowComponents(
+            criarMenuTickets()
+        )
+
+        .addSeparatorComponents(
+            new SeparatorBuilder()
+        )
+
+        .addTextDisplayComponents(
+            new TextDisplayBuilder()
+                .setContent("-# UTL - TICKET SYSTEM")
+        );
+
+    return container;
+}
+
+// ==========================================
+// CRIAR TICKET
+// ==========================================
+
 async function criarTicket(interaction, tipo, informacoes = []) {
 
     const guild = interaction.guild;
@@ -40,7 +131,9 @@ async function criarTicket(interaction, tipo, informacoes = []) {
         permissionOverwrites: [
             {
                 id: guild.roles.everyone.id,
-                deny: [PermissionFlagsBits.ViewChannel]
+                deny: [
+                    PermissionFlagsBits.ViewChannel
+                ]
             },
             {
                 id: user.id,
@@ -70,9 +163,11 @@ async function criarTicket(interaction, tipo, informacoes = []) {
             new TextDisplayBuilder()
                 .setContent("## 🎫 INFORMAÇÕES DO TICKET")
         )
+
         .addSeparatorComponents(
             new SeparatorBuilder()
         )
+
         .addTextDisplayComponents(
             new TextDisplayBuilder()
                 .setContent(textoInformacoes)
@@ -83,13 +178,16 @@ async function criarTicket(interaction, tipo, informacoes = []) {
             new TextDisplayBuilder()
                 .setContent("## 🔒 ENCERRAMENTO DO TICKET")
         )
+
         .addSeparatorComponents(
             new SeparatorBuilder()
         )
+
         .addTextDisplayComponents(
             new TextDisplayBuilder()
                 .setContent("Gostaria de fechar o ticket?")
         )
+
         .addActionRowComponents(
             new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
@@ -106,51 +204,23 @@ async function criarTicket(interaction, tipo, informacoes = []) {
             infoContainer,
             fecharContainer
         ],
-        flags: 1 << 15
+        flags: 32768
     });
 
     return canal;
 }
 
-// Select Menu
-function criarMenuTickets() {
+// ==========================================
+// MODAL — OWNAR
+// ==========================================
 
-    const menu = new StringSelectMenuBuilder()
-        .setCustomId("ticket_menu")
-        .setPlaceholder("Selecione uma opção")
-        .addOptions(
-            {
-                label: "Ownar",
-                value: OWNAR,
-                emoji: "👑"
-            },
-            {
-                label: "Parceria",
-                value: PARCERIA,
-                emoji: "🤝"
-            },
-            {
-                label: "Denúncia",
-                value: DENUNCIA,
-                emoji: "🚨"
-            },
-            {
-                label: "Outros",
-                value: OUTROS,
-                emoji: "❔"
-            }
-        );
-
-    return new ActionRowBuilder().addComponents(menu);
-}
-
-// Modal de Ownar
 function modalOwnar() {
 
     return new ModalBuilder()
         .setCustomId("modal_ownar")
         .setTitle("👑 Solicitação de Ownar")
         .addComponents(
+
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId("time")
@@ -159,6 +229,7 @@ function modalOwnar() {
                     .setStyle(TextInputStyle.Short)
                     .setRequired(true)
             ),
+
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId("squadsheet")
@@ -170,13 +241,17 @@ function modalOwnar() {
         );
 }
 
-// Modal de Parceria
+// ==========================================
+// MODAL — PARCERIA
+// ==========================================
+
 function modalParceria() {
 
     return new ModalBuilder()
         .setCustomId("modal_parceria")
         .setTitle("🤝 Proposta de Parceria")
         .addComponents(
+
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId("parceria")
@@ -188,13 +263,17 @@ function modalParceria() {
         );
 }
 
-// Modal de Denúncia
+// ==========================================
+// MODAL — DENÚNCIA
+// ==========================================
+
 function modalDenuncia() {
 
     return new ModalBuilder()
         .setCustomId("modal_denuncia")
         .setTitle("🚨 Denúncia")
         .addComponents(
+
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId("id_pessoa")
@@ -203,6 +282,7 @@ function modalDenuncia() {
                     .setStyle(TextInputStyle.Short)
                     .setRequired(true)
             ),
+
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId("prova")
@@ -217,6 +297,7 @@ function modalDenuncia() {
 module.exports = {
     criarTicket,
     criarMenuTickets,
+    criarPainelTickets,
     modalOwnar,
     modalParceria,
     modalDenuncia,
