@@ -1,17 +1,9 @@
 const {
     Client,
-    GatewayIntentBits,
-    ActionRowBuilder,
-    StringSelectMenuBuilder,
-    ContainerBuilder,
-    TextDisplayBuilder,
-    SeparatorBuilder,
-    MediaGalleryBuilder,
-    MediaGalleryItemBuilder,
-    SectionBuilder,
-    ThumbnailBuilder,
-    MessageFlags
+    GatewayIntentBits
 } = require("discord.js");
+
+const http = require("http");
 
 const config = require("./config");
 
@@ -32,17 +24,41 @@ const client = new Client({
     ]
 });
 
+// ==========================
+// SERVIDOR PARA O RENDER
+// ==========================
+
+const PORT = process.env.PORT || 3000;
+
+http.createServer((req, res) => {
+    res.writeHead(200, {
+        "Content-Type": "text/plain"
+    });
+
+    res.end("UTL Ticket Bot está online.");
+}).listen(PORT, () => {
+    console.log(`🌐 Servidor HTTP iniciado na porta ${PORT}`);
+});
+
+// ==========================
+// BOT DISCORD
+// ==========================
+
 client.once("ready", () => {
     console.log(`✅ Bot conectado como ${client.user.tag}`);
 });
+
+// ==========================
+// INTERAÇÕES
+// ==========================
 
 client.on("interactionCreate", async (interaction) => {
 
     try {
 
-        // =========================
+        // ==========================
         // SELECT MENU
-        // =========================
+        // ==========================
 
         if (interaction.isStringSelectMenu()) {
 
@@ -79,9 +95,9 @@ client.on("interactionCreate", async (interaction) => {
             }
         }
 
-        // =========================
-        // MODAL OWNAR
-        // =========================
+        // ==========================
+        // MODAL — OWNAR
+        // ==========================
 
         if (
             interaction.isModalSubmit() &&
@@ -92,8 +108,11 @@ client.on("interactionCreate", async (interaction) => {
                 ephemeral: true
             });
 
-            const time = interaction.fields.getTextInputValue("time");
-            const squadsheet = interaction.fields.getTextInputValue("squadsheet");
+            const time =
+                interaction.fields.getTextInputValue("time");
+
+            const squadsheet =
+                interaction.fields.getTextInputValue("squadsheet");
 
             const canal = await criarTicket(
                 interaction,
@@ -109,9 +128,9 @@ client.on("interactionCreate", async (interaction) => {
             });
         }
 
-        // =========================
-        // MODAL PARCERIA
-        // =========================
+        // ==========================
+        // MODAL — PARCERIA
+        // ==========================
 
         if (
             interaction.isModalSubmit() &&
@@ -138,9 +157,9 @@ client.on("interactionCreate", async (interaction) => {
             });
         }
 
-        // =========================
-        // MODAL DENÚNCIA
-        // =========================
+        // ==========================
+        // MODAL — DENÚNCIA
+        // ==========================
 
         if (
             interaction.isModalSubmit() &&
@@ -171,9 +190,9 @@ client.on("interactionCreate", async (interaction) => {
             });
         }
 
-        // =========================
+        // ==========================
         // FECHAR TICKET
-        // =========================
+        // ==========================
 
         if (
             interaction.isButton() &&
@@ -201,9 +220,12 @@ client.on("interactionCreate", async (interaction) => {
 
     } catch (error) {
 
-        console.error("Erro na interação:", error);
+        console.error("❌ Erro na interação:", error);
 
-        if (!interaction.replied && !interaction.deferred) {
+        if (
+            !interaction.replied &&
+            !interaction.deferred
+        ) {
 
             await interaction.reply({
                 content: "❌ Ocorreu um erro ao processar esta ação.",
@@ -213,5 +235,9 @@ client.on("interactionCreate", async (interaction) => {
         }
     }
 });
+
+// ==========================
+// LOGIN
+// ==========================
 
 client.login(config.TOKEN);
