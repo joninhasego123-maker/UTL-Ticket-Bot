@@ -27,6 +27,7 @@ const {
     contractCommands,
     executarPerm,
     executarUnperm,
+    executarPermlist,
     executarContract,
     executarRelease,
     processarBotaoContrato
@@ -96,7 +97,9 @@ client.once("ready", async () => {
             }
         );
 
-        console.log("✅ Comandos Slash registrados com sucesso.");
+        console.log(
+            "✅ Comandos Slash registrados com sucesso."
+        );
 
     } catch (error) {
 
@@ -123,21 +126,30 @@ client.on("interactionCreate", async interaction => {
 
             // Contract
             if (
-                interaction.customId.startsWith("contract_accept_") ||
-                interaction.customId.startsWith("contract_decline_")
+                interaction.customId.startsWith(
+                    "contract_accept_"
+                ) ||
+                interaction.customId.startsWith(
+                    "contract_decline_"
+                )
             ) {
 
-                await processarBotaoContrato(interaction);
+                await processarBotaoContrato(
+                    interaction
+                );
+
                 return;
             }
 
             // Fechar ticket
             if (
-                interaction.customId === "fechar_ticket"
+                interaction.customId ===
+                "fechar_ticket"
             ) {
 
                 await interaction.reply({
-                    content: "🔒 Este ticket será fechado...",
+                    content:
+                        "🔒 Este ticket será fechado...",
                     ephemeral: true
                 });
 
@@ -163,7 +175,10 @@ client.on("interactionCreate", async interaction => {
             // TICKET
             // =====================================
 
-            if (interaction.commandName === "ticket") {
+            if (
+                interaction.commandName ===
+                "ticket"
+            ) {
 
                 if (
                     !interaction.memberPermissions.has(
@@ -178,9 +193,10 @@ client.on("interactionCreate", async interaction => {
                     });
                 }
 
-                const channel = await client.channels.fetch(
-                    config.TICKET_PANEL_CHANNEL_ID
-                );
+                const channel =
+                    await client.channels.fetch(
+                        config.TICKET_PANEL_CHANNEL_ID
+                    );
 
                 if (!channel) {
 
@@ -199,21 +215,27 @@ client.on("interactionCreate", async interaction => {
 
                     files: [
                         {
-                            attachment: path.join(
-                                __dirname,
-                                "imagens",
+                            attachment:
+                                path.join(
+                                    __dirname,
+                                    "imagens",
+                                    "ticket_topo.png"
+                                ),
+
+                            name:
                                 "ticket_topo.png"
-                            ),
-                            name: "ticket_topo.png"
                         },
 
                         {
-                            attachment: path.join(
-                                __dirname,
-                                "imagens",
+                            attachment:
+                                path.join(
+                                    __dirname,
+                                    "imagens",
+                                    "utl_logo.png"
+                                ),
+
+                            name:
                                 "utl_logo.png"
-                            ),
-                            name: "utl_logo.png"
                         }
                     ],
 
@@ -231,7 +253,10 @@ client.on("interactionCreate", async interaction => {
             // PERM
             // =====================================
 
-            if (interaction.commandName === "perm") {
+            if (
+                interaction.commandName ===
+                "perm"
+            ) {
 
                 return executarPerm(
                     interaction
@@ -242,9 +267,26 @@ client.on("interactionCreate", async interaction => {
             // UNPERM
             // =====================================
 
-            if (interaction.commandName === "unperm") {
+            if (
+                interaction.commandName ===
+                "unperm"
+            ) {
 
                 return executarUnperm(
+                    interaction
+                );
+            }
+
+            // =====================================
+            // PERMLIST
+            // =====================================
+
+            if (
+                interaction.commandName ===
+                "permlist"
+            ) {
+
+                return executarPermlist(
                     interaction
                 );
             }
@@ -253,7 +295,10 @@ client.on("interactionCreate", async interaction => {
             // CONTRACT
             // =====================================
 
-            if (interaction.commandName === "contract") {
+            if (
+                interaction.commandName ===
+                "contract"
+            ) {
 
                 return executarContract(
                     interaction
@@ -264,7 +309,10 @@ client.on("interactionCreate", async interaction => {
             // RELEASE
             // =====================================
 
-            if (interaction.commandName === "release") {
+            if (
+                interaction.commandName ===
+                "release"
+            ) {
 
                 return executarRelease(
                     interaction
@@ -276,17 +324,22 @@ client.on("interactionCreate", async interaction => {
         // MENU DE TICKETS
         // =========================================
 
-        if (interaction.isStringSelectMenu()) {
+        if (
+            interaction.isStringSelectMenu()
+        ) {
 
             if (
-                interaction.customId === "ticket_menu"
+                interaction.customId ===
+                "ticket_menu"
             ) {
 
                 const value =
                     interaction.values[0];
 
                 // OWNAR
-                if (value === OWNAR) {
+                if (
+                    value === OWNAR
+                ) {
 
                     return interaction.showModal(
                         modalOwnar()
@@ -294,7 +347,9 @@ client.on("interactionCreate", async interaction => {
                 }
 
                 // PARCERIA
-                if (value === PARCERIA) {
+                if (
+                    value === PARCERIA
+                ) {
 
                     return interaction.showModal(
                         modalParceria()
@@ -302,7 +357,9 @@ client.on("interactionCreate", async interaction => {
                 }
 
                 // DENÚNCIA
-                if (value === DENUNCIA) {
+                if (
+                    value === DENUNCIA
+                ) {
 
                     return criarTicket(
                         interaction,
@@ -311,7 +368,9 @@ client.on("interactionCreate", async interaction => {
                 }
 
                 // OUTROS
-                if (value === OUTROS) {
+                if (
+                    value === OUTROS
+                ) {
 
                     return interaction.showModal(
                         modalOutros()
@@ -324,11 +383,14 @@ client.on("interactionCreate", async interaction => {
         // MODAIS
         // =========================================
 
-        if (interaction.isModalSubmit()) {
+        if (
+            interaction.isModalSubmit()
+        ) {
 
             // OWNAR
             if (
-                interaction.customId === "modal_ownar"
+                interaction.customId ===
+                "modal_ownar"
             ) {
 
                 const time =
@@ -350,7 +412,8 @@ client.on("interactionCreate", async interaction => {
 
             // PARCERIA
             if (
-                interaction.customId === "modal_parceria"
+                interaction.customId ===
+                "modal_parceria"
             ) {
 
                 const parceria =
@@ -367,7 +430,8 @@ client.on("interactionCreate", async interaction => {
 
             // OUTROS
             if (
-                interaction.customId === "modal_outros"
+                interaction.customId ===
+                "modal_outros"
             ) {
 
                 const assunto =
