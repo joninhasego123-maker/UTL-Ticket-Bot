@@ -149,7 +149,11 @@ function criarPainelTickets() {
 // CRIAR TICKET
 // ===============================
 
-async function criarTicket(interaction, tipo, informacoes = "") {
+async function criarTicket(
+    interaction,
+    tipo,
+    informacoes = ""
+) {
 
     await interaction.deferReply({
         ephemeral: true
@@ -165,6 +169,10 @@ async function criarTicket(interaction, tipo, informacoes = "") {
     if (tipo === "denuncia") nomeTipo = "Denúncia";
     if (tipo === "outros") nomeTipo = "Outros";
 
+
+    // ===============================
+    // CRIAR CANAL
+    // ===============================
 
     const channel = await guild.channels.create({
 
@@ -219,56 +227,81 @@ async function criarTicket(interaction, tipo, informacoes = "") {
 
     if (informacoes) {
 
+        // ===========================
         // OWNAR
+        // ===========================
+
         if (tipo === "ownar") {
 
-            const partes = informacoes.split(
-                "\n"
-            );
+            let dados;
 
-            const time =
-                partes[0]
-                    ?.replace("**Time/Seleção:** ", "")
-                    .trim() || "";
+            try {
 
-            const squadsheet =
-                partes[1]
-                    ?.replace("**Squadsheet:** ", "")
-                    .trim() || "";
+                dados = JSON.parse(
+                    informacoes
+                );
+
+            } catch {
+
+                dados = {
+                    time: "",
+                    squadsheet: informacoes
+                };
+            }
+
 
             textoInformacoes =
+
                 `\n**Time/Seleção**\n` +
+
                 "```\n" +
-                `${time}\n` +
+                `${dados.time}\n` +
                 "```\n" +
 
                 `**Squadsheet**\n` +
+
                 "```\n" +
-                `${squadsheet}\n` +
+                `${dados.squadsheet}\n` +
                 "```";
         }
 
+
+        // ===========================
         // PARCERIA
+        // ===========================
+
         else if (tipo === "parceria") {
 
             textoInformacoes =
+
                 `\n**Proposta de parceria**\n` +
+
                 "```\n" +
                 `${informacoes}\n` +
                 "```";
         }
 
+
+        // ===========================
         // OUTROS
+        // ===========================
+
         else if (tipo === "outros") {
 
             textoInformacoes =
+
                 `\n**Assunto**\n` +
+
                 "```\n" +
                 `${informacoes}\n` +
                 "```";
         }
 
+
+        // ===========================
         // OUTROS TIPOS
+        // ===========================
+
         else {
 
             textoInformacoes =
@@ -284,22 +317,27 @@ async function criarTicket(interaction, tipo, informacoes = "") {
     if (tipo === "denuncia") {
 
         textoInformacoes =
+
             "\n**Envie a imagem da prova neste canal.**\n" +
+
             "Anexe a imagem diretamente na sua próxima mensagem.";
     }
 
 
     // ===============================
-    // CONTAINER DE INFORMAÇÕES
+    // INFORMAÇÕES DO TICKET
     // ===============================
 
-    const infoContainer = new ContainerBuilder()
+    const infoContainer =
+        new ContainerBuilder()
 
         .addTextDisplayComponents(
+
             new TextDisplayBuilder()
                 .setContent(
                     `${user} <@&${config.STAFF_ROLE_ID}>`
                 )
+
         )
 
         .addSeparatorComponents(
@@ -307,13 +345,19 @@ async function criarTicket(interaction, tipo, informacoes = "") {
         )
 
         .addTextDisplayComponents(
+
             new TextDisplayBuilder()
                 .setContent(
+
                     `## 🎫 INFORMAÇÕES DO TICKET\n\n` +
+
                     `**Tipo:** ${nomeTipo}\n` +
+
                     `**Usuário:** ${user}\n` +
+
                     textoInformacoes
                 )
+
         );
 
 
@@ -321,18 +365,23 @@ async function criarTicket(interaction, tipo, informacoes = "") {
     // FECHAR TICKET
     // ===============================
 
-    const fecharContainer = new ContainerBuilder()
+    const fecharContainer =
+        new ContainerBuilder()
 
         .addSeparatorComponents(
             new SeparatorBuilder()
         )
 
         .addTextDisplayComponents(
+
             new TextDisplayBuilder()
                 .setContent(
+
                     "## 🔒 ENCERRAMENTO DO TICKET\n\n" +
+
                     "Gostaria de fechar o ticket?"
                 )
+
         )
 
         .addActionRowComponents(
@@ -340,10 +389,16 @@ async function criarTicket(interaction, tipo, informacoes = "") {
             new ActionRowBuilder().addComponents(
 
                 new ButtonBuilder()
-                    .setCustomId("fechar_ticket")
-                    .setLabel("Fechar Ticket")
+                    .setCustomId(
+                        "fechar_ticket"
+                    )
+                    .setLabel(
+                        "Fechar Ticket"
+                    )
                     .setEmoji("🔒")
-                    .setStyle(ButtonStyle.Danger)
+                    .setStyle(
+                        ButtonStyle.Danger
+                    )
 
             )
         );
@@ -369,7 +424,9 @@ async function criarTicket(interaction, tipo, informacoes = "") {
     // ===============================
 
     await interaction.editReply({
-        content: `✅ Ticket criado com sucesso: ${channel}`
+
+        content:
+            `✅ Ticket criado com sucesso: ${channel}`
     });
 
 
@@ -383,34 +440,61 @@ async function criarTicket(interaction, tipo, informacoes = "") {
 
 function modalOwnar() {
 
-    const modal = new ModalBuilder()
-        .setCustomId("modal_ownar")
-        .setTitle("👑 Solicitação de Ownar");
+    const modal =
+        new ModalBuilder()
+            .setCustomId(
+                "modal_ownar"
+            )
+            .setTitle(
+                "👑 Solicitação de Ownar"
+            );
 
 
-    const time = new TextInputBuilder()
-        .setCustomId("time")
-        .setLabel("Qual time ou seleção você quer ownar?")
-        .setPlaceholder("Informe o nome do time ou seleção")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+    const time =
+        new TextInputBuilder()
+            .setCustomId(
+                "time"
+            )
+            .setLabel(
+                "Qual time ou seleção você quer ownar?"
+            )
+            .setPlaceholder(
+                "Informe o nome do time ou seleção"
+            )
+            .setStyle(
+                TextInputStyle.Paragraph
+            )
+            .setRequired(true);
 
 
-    const squadsheet = new TextInputBuilder()
-        .setCustomId("squadsheet")
-        .setLabel("Squadsheet")
-        .setPlaceholder("Informe a Squadsheet")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+    const squadsheet =
+        new TextInputBuilder()
+            .setCustomId(
+                "squadsheet"
+            )
+            .setLabel(
+                "Squadsheet"
+            )
+            .setPlaceholder(
+                "Informe a Squadsheet"
+            )
+            .setStyle(
+                TextInputStyle.Paragraph
+            )
+            .setRequired(true);
 
 
     modal.addComponents(
 
         new ActionRowBuilder()
-            .addComponents(time),
+            .addComponents(
+                time
+            ),
 
         new ActionRowBuilder()
-            .addComponents(squadsheet)
+            .addComponents(
+                squadsheet
+            )
 
     );
 
@@ -425,23 +509,39 @@ function modalOwnar() {
 
 function modalParceria() {
 
-    const modal = new ModalBuilder()
-        .setCustomId("modal_parceria")
-        .setTitle("🤝 Proposta de Parceria");
+    const modal =
+        new ModalBuilder()
+            .setCustomId(
+                "modal_parceria"
+            )
+            .setTitle(
+                "🤝 Proposta de Parceria"
+            );
 
 
-    const parceria = new TextInputBuilder()
-        .setCustomId("parceria")
-        .setLabel("Texto da sua parceria")
-        .setPlaceholder("Explique sua proposta de parceria")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+    const parceria =
+        new TextInputBuilder()
+            .setCustomId(
+                "parceria"
+            )
+            .setLabel(
+                "Texto da sua parceria"
+            )
+            .setPlaceholder(
+                "Explique sua proposta de parceria"
+            )
+            .setStyle(
+                TextInputStyle.Paragraph
+            )
+            .setRequired(true);
 
 
     modal.addComponents(
 
         new ActionRowBuilder()
-            .addComponents(parceria)
+            .addComponents(
+                parceria
+            )
 
     );
 
@@ -456,23 +556,39 @@ function modalParceria() {
 
 function modalOutros() {
 
-    const modal = new ModalBuilder()
-        .setCustomId("modal_outros")
-        .setTitle("❔ Outros");
+    const modal =
+        new ModalBuilder()
+            .setCustomId(
+                "modal_outros"
+            )
+            .setTitle(
+                "❔ Outros"
+            );
 
 
-    const assunto = new TextInputBuilder()
-        .setCustomId("assunto")
-        .setLabel("O que você deseja?")
-        .setPlaceholder("Informe brevemente o motivo do ticket")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+    const assunto =
+        new TextInputBuilder()
+            .setCustomId(
+                "assunto"
+            )
+            .setLabel(
+                "O que você deseja?"
+            )
+            .setPlaceholder(
+                "Informe brevemente o motivo do ticket"
+            )
+            .setStyle(
+                TextInputStyle.Paragraph
+            )
+            .setRequired(true);
 
 
     modal.addComponents(
 
         new ActionRowBuilder()
-            .addComponents(assunto)
+            .addComponents(
+                assunto
+            )
 
     );
 
