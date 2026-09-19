@@ -124,7 +124,7 @@ client.on("interactionCreate", async interaction => {
 
         if (interaction.isButton()) {
 
-            // Contract
+            // CONTRACT
             if (
                 interaction.customId.startsWith(
                     "contract_accept_"
@@ -141,7 +141,7 @@ client.on("interactionCreate", async interaction => {
                 return;
             }
 
-            // Fechar ticket
+            // FECHAR TICKET
             if (
                 interaction.customId ===
                 "fechar_ticket"
@@ -387,7 +387,10 @@ client.on("interactionCreate", async interaction => {
             interaction.isModalSubmit()
         ) {
 
+            // =====================================
             // OWNAR
+            // =====================================
+
             if (
                 interaction.customId ===
                 "modal_ownar"
@@ -406,11 +409,17 @@ client.on("interactionCreate", async interaction => {
                 return criarTicket(
                     interaction,
                     "ownar",
-                    `**Time/Seleção:** ${time}\n**Squadsheet:** ${squadsheet}`
+                    JSON.stringify({
+                        time: time,
+                        squadsheet: squadsheet
+                    })
                 );
             }
 
+            // =====================================
             // PARCERIA
+            // =====================================
+
             if (
                 interaction.customId ===
                 "modal_parceria"
@@ -428,7 +437,10 @@ client.on("interactionCreate", async interaction => {
                 );
             }
 
+            // =====================================
             // OUTROS
+            // =====================================
+
             if (
                 interaction.customId ===
                 "modal_outros"
