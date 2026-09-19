@@ -98,14 +98,12 @@ function criarPainelTickets() {
 
     const container = new ContainerBuilder()
 
-        // IMAGEM TICKETS NO TOPO
         .addMediaGalleryComponents(imagemTopo)
 
         .addSeparatorComponents(
             new SeparatorBuilder()
         )
 
-        // TÍTULO + LOGO AO LADO
         .addSectionComponents(titulo)
 
         .addSeparatorComponents(
@@ -153,7 +151,6 @@ function criarPainelTickets() {
 
 async function criarTicket(interaction, tipo, informacoes = "") {
 
-    // RESPONDE A INTERAÇÃO IMEDIATAMENTE
     await interaction.deferReply({
         ephemeral: true
     });
@@ -222,10 +219,67 @@ async function criarTicket(interaction, tipo, informacoes = "") {
 
     if (informacoes) {
 
-        textoInformacoes =
-            `\n**Informações enviadas:**\n${informacoes}`;
+        // OWNAR
+        if (tipo === "ownar") {
+
+            const partes = informacoes.split(
+                "\n"
+            );
+
+            const time =
+                partes[0]
+                    ?.replace("**Time/Seleção:** ", "")
+                    .trim() || "";
+
+            const squadsheet =
+                partes[1]
+                    ?.replace("**Squadsheet:** ", "")
+                    .trim() || "";
+
+            textoInformacoes =
+                `\n**Time/Seleção**\n` +
+                "```\n" +
+                `${time}\n` +
+                "```\n" +
+
+                `**Squadsheet**\n` +
+                "```\n" +
+                `${squadsheet}\n` +
+                "```";
+        }
+
+        // PARCERIA
+        else if (tipo === "parceria") {
+
+            textoInformacoes =
+                `\n**Proposta de parceria**\n` +
+                "```\n" +
+                `${informacoes}\n` +
+                "```";
+        }
+
+        // OUTROS
+        else if (tipo === "outros") {
+
+            textoInformacoes =
+                `\n**Assunto**\n` +
+                "```\n" +
+                `${informacoes}\n` +
+                "```";
+        }
+
+        // OUTROS TIPOS
+        else {
+
+            textoInformacoes =
+                `\n${informacoes}`;
+        }
     }
 
+
+    // ===============================
+    // DENÚNCIA
+    // ===============================
 
     if (tipo === "denuncia") {
 
@@ -234,6 +288,10 @@ async function criarTicket(interaction, tipo, informacoes = "") {
             "Anexe a imagem diretamente na sua próxima mensagem.";
     }
 
+
+    // ===============================
+    // CONTAINER DE INFORMAÇÕES
+    // ===============================
 
     const infoContainer = new ContainerBuilder()
 
@@ -291,6 +349,10 @@ async function criarTicket(interaction, tipo, informacoes = "") {
         );
 
 
+    // ===============================
+    // ENVIAR TICKET
+    // ===============================
+
     await channel.send({
 
         components: [
@@ -303,7 +365,7 @@ async function criarTicket(interaction, tipo, informacoes = "") {
 
 
     // ===============================
-    // RESPOSTA DA INTERAÇÃO
+    // RESPOSTA
     // ===============================
 
     await interaction.editReply({
