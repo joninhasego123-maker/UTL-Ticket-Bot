@@ -6,7 +6,9 @@ const {
     ActionRowBuilder,
     ContainerBuilder,
     TextDisplayBuilder,
-    SeparatorBuilder
+    SeparatorBuilder,
+    SectionBuilder,
+    ThumbnailBuilder
 } = require("discord.js");
 
 const FREEAGENCY_CHANNEL_ID = "1543589764790354010";
@@ -89,26 +91,28 @@ async function processarFreeagency(interaction) {
     const jogador =
         interaction.user;
 
+    const avatar =
+        jogador.displayAvatarURL({
+            extension: "png",
+            size: 256
+        });
+
+    const jogadorInfo =
+        new SectionBuilder()
+            .addTextDisplayComponents(
+                new TextDisplayBuilder()
+                    .setContent(
+                        `**Jogador:** ${jogador}\n` +
+                        `**Id:** ${jogador.id}`
+                    )
+            )
+            .setThumbnailAccessory(
+                new ThumbnailBuilder()
+                    .setURL(avatar)
+            );
+
     let conteudo =
-        `## 🆓 FREE AGENCY\n\n` +
-
-        `**Jogador:** ${jogador}\n` +
-
-        `**Id:** ${jogador.id}\n\n` +
-
-        `**Posição:** ${posicao}\n` +
-
-        `**Experiência:** ${experiencia}\n` +
-
-        `**Plataforma:** ${plataforma}`;
-
-    if (extra) {
-        conteudo +=
-            `\n\n**Extra:** ${extra}`;
-    }
-
-    conteudo +=
-        `\n\n`;
+        `## FREE AGENCY\n\n`;
 
     const container =
         new ContainerBuilder()
@@ -118,6 +122,10 @@ async function processarFreeagency(interaction) {
                     .setContent(conteudo)
             )
 
+            .addSectionComponents(
+                jogadorInfo
+            )
+
             .addSeparatorComponents(
                 new SeparatorBuilder()
             )
@@ -125,9 +133,32 @@ async function processarFreeagency(interaction) {
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
-                        "-# UTL - FREE AGENTS"
+                        `**Posição:** ${posicao}\n` +
+                        `**Experiência:** ${experiencia}\n` +
+                        `**Plataforma:** ${plataforma}`
                     )
             );
+
+    if (extra) {
+        container
+            .addTextDisplayComponents(
+                new TextDisplayBuilder()
+                    .setContent(
+                        `\n**Extra:** ${extra}`
+                    )
+            );
+    }
+
+    container
+        .addSeparatorComponents(
+            new SeparatorBuilder()
+        )
+        .addTextDisplayComponents(
+            new TextDisplayBuilder()
+                .setContent(
+                    "-# UTL - FREE AGENTS"
+                )
+        );
 
     const channel =
         await interaction.client.channels.fetch(
