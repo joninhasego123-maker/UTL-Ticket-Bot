@@ -34,6 +34,17 @@ const {
 } = require("./contract");
 
 // =============================================
+// FREE AGENCY
+// =============================================
+
+const {
+    freeagencyCommand,
+    executarFreeagency,
+    processarFreeagency
+} = require("./freeagency");
+
+
+// =============================================
 // CLIENT
 // =============================================
 
@@ -45,6 +56,7 @@ const client = new Client({
     ]
 });
 
+
 // =============================================
 // RENDER
 // =============================================
@@ -52,6 +64,7 @@ const client = new Client({
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer((req, res) => {
+
     res.writeHead(200, {
         "Content-Type": "text/plain; charset=utf-8"
     });
@@ -60,8 +73,13 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-    console.log(`🌐 Servidor HTTP iniciado na porta ${PORT}`);
+
+    console.log(
+        `🌐 Servidor HTTP iniciado na porta ${PORT}`
+    );
+
 });
+
 
 // =============================================
 // READY
@@ -69,7 +87,9 @@ server.listen(PORT, () => {
 
 client.once("ready", async () => {
 
-    console.log(`✅ Bot conectado como ${client.user.tag}`);
+    console.log(
+        `✅ Bot conectado como ${client.user.tag}`
+    );
 
     const rest = new REST({
         version: "10"
@@ -78,24 +98,51 @@ client.once("ready", async () => {
     try {
 
         const commands = [
+
+            // =====================================
+            // TICKET
+            // =====================================
+
             {
                 name: "ticket",
-                description: "Envia o painel de Tickets da UTL.",
+                description:
+                    "Envia o painel de Tickets da UTL.",
+
                 default_member_permissions:
                     PermissionFlagsBits.Administrator.toString()
             },
 
-            ...contractCommands.map(command =>
-                command.toJSON()
+
+            // =====================================
+            // FREE AGENCY
+            // =====================================
+
+            freeagencyCommand.toJSON(),
+
+
+            // =====================================
+            // CONTRACTS
+            // =====================================
+
+            ...contractCommands.map(
+                command => command.toJSON()
             )
+
         ];
 
+
         await rest.put(
-            Routes.applicationCommands(client.user.id),
+
+            Routes.applicationCommands(
+                client.user.id
+            ),
+
             {
                 body: commands
             }
+
         );
+
 
         console.log(
             "✅ Comandos Slash registrados com sucesso."
@@ -107,381 +154,580 @@ client.once("ready", async () => {
             "❌ Erro ao registrar comandos Slash:",
             error
         );
+
     }
+
 });
+
 
 // =============================================
 // INTERAÇÕES
 // =============================================
 
-client.on("interactionCreate", async interaction => {
+client.on(
+    "interactionCreate",
+    async interaction => {
 
-    try {
+        try {
 
-        // =========================================
-        // BOTÕES
-        // =========================================
+            // =========================================
+            // BOTÕES
+            // =========================================
 
-        if (interaction.isButton()) {
-
-            // CONTRACT
             if (
-                interaction.customId.startsWith(
-                    "contract_accept_"
-                ) ||
-                interaction.customId.startsWith(
-                    "contract_decline_"
-                )
+                interaction.isButton()
             ) {
 
-                await processarBotaoContrato(
-                    interaction
-                );
+                // =====================================
+                // CONTRACT
+                // =====================================
 
-                return;
+                if (
+
+                    interaction.customId.startsWith(
+                        "contract_accept_"
+                    )
+
+                    ||
+
+                    interaction.customId.startsWith(
+                        "contract_decline_"
+                    )
+
+                ) {
+
+                    await processarBotaoContrato(
+                        interaction
+                    );
+
+                    return;
+
+                }
+
+
+                // =====================================
+                // FECHAR TICKET
+                // =====================================
+
+                if (
+
+                    interaction.customId ===
+                    "fechar_ticket"
+
+                ) {
+
+                    await interaction.reply({
+
+                        content:
+                            "🔒 Este ticket será fechado...",
+
+                        ephemeral: true
+
+                    });
+
+
+                    setTimeout(
+                        async () => {
+
+                            await interaction.channel
+                                .delete()
+                                .catch(() => {});
+
+                        },
+                        2000
+                    );
+
+
+                    return;
+
+                }
+
             }
 
-            // FECHAR TICKET
+
+            // =========================================
+            // SLASH COMMANDS
+            // =========================================
+
             if (
-                interaction.customId ===
-                "fechar_ticket"
+                interaction.isChatInputCommand()
+            ) {
+
+
+                // =====================================
+                // TICKET
+                // =====================================
+
+                if (
+
+                    interaction.commandName ===
+                    "ticket"
+
+                ) {
+
+                    if (
+
+                        !interaction.memberPermissions.has(
+                            PermissionFlagsBits.Administrator
+                        )
+
+                    ) {
+
+                        return interaction.reply({
+
+                            content:
+                                "❌ Você não possui permissão para usar este comando.",
+
+                            ephemeral: true
+
+                        });
+
+                    }
+
+
+                    const channel =
+                        await client.channels.fetch(
+                            config.TICKET_PANEL_CHANNEL_ID
+                        );
+
+
+                    if (!channel) {
+
+                        return interaction.reply({
+
+                            content:
+                                "❌ Não encontrei o canal do painel de Tickets.",
+
+                            ephemeral: true
+
+                        });
+
+                    }
+
+
+                    await channel.send({
+
+                        components: [
+                            criarPainelTickets()
+                        ],
+
+
+                        files: [
+
+                            {
+
+                                attachment:
+                                    path.join(
+                                        __dirname,
+                                        "imagens",
+                                        "ticket_topo.png"
+                                    ),
+
+                                name:
+                                    "ticket_topo.png"
+
+                            },
+
+
+                            {
+
+                                attachment:
+                                    path.join(
+                                        __dirname,
+                                        "imagens",
+                                        "utl_logo.png"
+                                    ),
+
+                                name:
+                                    "utl_logo.png"
+
+                            }
+
+                        ],
+
+
+                        flags: 32768
+
+                    });
+
+
+                    return interaction.reply({
+
+                        content:
+                            "✅ Painel de Tickets enviado!",
+
+                        ephemeral: true
+
+                    });
+
+                }
+
+
+                // =====================================
+                // FREE AGENCY
+                // =====================================
+
+                if (
+
+                    interaction.commandName ===
+                    "freeagency"
+
+                ) {
+
+                    return executarFreeagency(
+                        interaction
+                    );
+
+                }
+
+
+                // =====================================
+                // PERM
+                // =====================================
+
+                if (
+
+                    interaction.commandName ===
+                    "perm"
+
+                ) {
+
+                    return executarPerm(
+                        interaction
+                    );
+
+                }
+
+
+                // =====================================
+                // UNPERM
+                // =====================================
+
+                if (
+
+                    interaction.commandName ===
+                    "unperm"
+
+                ) {
+
+                    return executarUnperm(
+                        interaction
+                    );
+
+                }
+
+
+                // =====================================
+                // PERMLIST
+                // =====================================
+
+                if (
+
+                    interaction.commandName ===
+                    "permlist"
+
+                ) {
+
+                    return executarPermlist(
+                        interaction
+                    );
+
+                }
+
+
+                // =====================================
+                // CONTRACT
+                // =====================================
+
+                if (
+
+                    interaction.commandName ===
+                    "contract"
+
+                ) {
+
+                    return executarContract(
+                        interaction
+                    );
+
+                }
+
+
+                // =====================================
+                // RELEASE
+                // =====================================
+
+                if (
+
+                    interaction.commandName ===
+                    "release"
+
+                ) {
+
+                    return executarRelease(
+                        interaction
+                    );
+
+                }
+
+            }
+
+
+            // =========================================
+            // MENU DE TICKETS
+            // =========================================
+
+            if (
+                interaction.isStringSelectMenu()
+            ) {
+
+                if (
+
+                    interaction.customId ===
+                    "ticket_menu"
+
+                ) {
+
+                    const value =
+                        interaction.values[0];
+
+
+                    // =================================
+                    // OWNAR
+                    // =================================
+
+                    if (
+                        value === OWNAR
+                    ) {
+
+                        return interaction.showModal(
+                            modalOwnar()
+                        );
+
+                    }
+
+
+                    // =================================
+                    // PARCERIA
+                    // =================================
+
+                    if (
+                        value === PARCERIA
+                    ) {
+
+                        return interaction.showModal(
+                            modalParceria()
+                        );
+
+                    }
+
+
+                    // =================================
+                    // DENÚNCIA
+                    // =================================
+
+                    if (
+                        value === DENUNCIA
+                    ) {
+
+                        return criarTicket(
+
+                            interaction,
+
+                            "denuncia"
+
+                        );
+
+                    }
+
+
+                    // =================================
+                    // OUTROS
+                    // =================================
+
+                    if (
+                        value === OUTROS
+                    ) {
+
+                        return interaction.showModal(
+                            modalOutros()
+                        );
+
+                    }
+
+                }
+
+            }
+
+
+            // =========================================
+            // MODAIS
+            // =========================================
+
+            if (
+                interaction.isModalSubmit()
+            ) {
+
+
+                // =====================================
+                // FREE AGENCY
+                // =====================================
+
+                if (
+
+                    interaction.customId ===
+                    "modal_freeagency"
+
+                ) {
+
+                    return processarFreeagency(
+                        interaction
+                    );
+
+                }
+
+
+                // =====================================
+                // OWNAR
+                // =====================================
+
+                if (
+
+                    interaction.customId ===
+                    "modal_ownar"
+
+                ) {
+
+                    const time =
+                        interaction.fields.getTextInputValue(
+                            "time"
+                        );
+
+
+                    const squadsheet =
+                        interaction.fields.getTextInputValue(
+                            "squadsheet"
+                        );
+
+
+                    return criarTicket(
+
+                        interaction,
+
+                        "ownar",
+
+                        JSON.stringify({
+
+                            time:
+                                time,
+
+                            squadsheet:
+                                squadsheet
+
+                        })
+
+                    );
+
+                }
+
+
+                // =====================================
+                // PARCERIA
+                // =====================================
+
+                if (
+
+                    interaction.customId ===
+                    "modal_parceria"
+
+                ) {
+
+                    const parceria =
+                        interaction.fields.getTextInputValue(
+                            "parceria"
+                        );
+
+
+                    return criarTicket(
+
+                        interaction,
+
+                        "parceria",
+
+                        parceria
+
+                    );
+
+                }
+
+
+                // =====================================
+                // OUTROS
+                // =====================================
+
+                if (
+
+                    interaction.customId ===
+                    "modal_outros"
+
+                ) {
+
+                    const assunto =
+                        interaction.fields.getTextInputValue(
+                            "assunto"
+                        );
+
+
+                    return criarTicket(
+
+                        interaction,
+
+                        "outros",
+
+                        assunto
+
+                    );
+
+                }
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "❌ Erro na interação:",
+                error
+            );
+
+
+            if (
+
+                !interaction.replied &&
+                !interaction.deferred
+
             ) {
 
                 await interaction.reply({
+
                     content:
-                        "🔒 Este ticket será fechado...",
+                        "❌ Ocorreu um erro ao processar esta interação.",
+
                     ephemeral: true
-                });
 
-                setTimeout(async () => {
+                }).catch(() => {});
 
-                    await interaction.channel
-                        .delete()
-                        .catch(() => {});
-
-                }, 2000);
-
-                return;
             }
+
         }
 
-        // =========================================
-        // SLASH COMMANDS
-        // =========================================
-
-        if (interaction.isChatInputCommand()) {
-
-            // =====================================
-            // TICKET
-            // =====================================
-
-            if (
-                interaction.commandName ===
-                "ticket"
-            ) {
-
-                if (
-                    !interaction.memberPermissions.has(
-                        PermissionFlagsBits.Administrator
-                    )
-                ) {
-
-                    return interaction.reply({
-                        content:
-                            "❌ Você não possui permissão para usar este comando.",
-                        ephemeral: true
-                    });
-                }
-
-                const channel =
-                    await client.channels.fetch(
-                        config.TICKET_PANEL_CHANNEL_ID
-                    );
-
-                if (!channel) {
-
-                    return interaction.reply({
-                        content:
-                            "❌ Não encontrei o canal do painel de Tickets.",
-                        ephemeral: true
-                    });
-                }
-
-                await channel.send({
-
-                    components: [
-                        criarPainelTickets()
-                    ],
-
-                    files: [
-                        {
-                            attachment:
-                                path.join(
-                                    __dirname,
-                                    "imagens",
-                                    "ticket_topo.png"
-                                ),
-
-                            name:
-                                "ticket_topo.png"
-                        },
-
-                        {
-                            attachment:
-                                path.join(
-                                    __dirname,
-                                    "imagens",
-                                    "utl_logo.png"
-                                ),
-
-                            name:
-                                "utl_logo.png"
-                        }
-                    ],
-
-                    flags: 32768
-                });
-
-                return interaction.reply({
-                    content:
-                        "✅ Painel de Tickets enviado!",
-                    ephemeral: true
-                });
-            }
-
-            // =====================================
-            // PERM
-            // =====================================
-
-            if (
-                interaction.commandName ===
-                "perm"
-            ) {
-
-                return executarPerm(
-                    interaction
-                );
-            }
-
-            // =====================================
-            // UNPERM
-            // =====================================
-
-            if (
-                interaction.commandName ===
-                "unperm"
-            ) {
-
-                return executarUnperm(
-                    interaction
-                );
-            }
-
-            // =====================================
-            // PERMLIST
-            // =====================================
-
-            if (
-                interaction.commandName ===
-                "permlist"
-            ) {
-
-                return executarPermlist(
-                    interaction
-                );
-            }
-
-            // =====================================
-            // CONTRACT
-            // =====================================
-
-            if (
-                interaction.commandName ===
-                "contract"
-            ) {
-
-                return executarContract(
-                    interaction
-                );
-            }
-
-            // =====================================
-            // RELEASE
-            // =====================================
-
-            if (
-                interaction.commandName ===
-                "release"
-            ) {
-
-                return executarRelease(
-                    interaction
-                );
-            }
-        }
-
-        // =========================================
-        // MENU DE TICKETS
-        // =========================================
-
-        if (
-            interaction.isStringSelectMenu()
-        ) {
-
-            if (
-                interaction.customId ===
-                "ticket_menu"
-            ) {
-
-                const value =
-                    interaction.values[0];
-
-                // OWNAR
-                if (
-                    value === OWNAR
-                ) {
-
-                    return interaction.showModal(
-                        modalOwnar()
-                    );
-                }
-
-                // PARCERIA
-                if (
-                    value === PARCERIA
-                ) {
-
-                    return interaction.showModal(
-                        modalParceria()
-                    );
-                }
-
-                // DENÚNCIA
-                if (
-                    value === DENUNCIA
-                ) {
-
-                    return criarTicket(
-                        interaction,
-                        "denuncia"
-                    );
-                }
-
-                // OUTROS
-                if (
-                    value === OUTROS
-                ) {
-
-                    return interaction.showModal(
-                        modalOutros()
-                    );
-                }
-            }
-        }
-
-        // =========================================
-        // MODAIS
-        // =========================================
-
-        if (
-            interaction.isModalSubmit()
-        ) {
-
-            // =====================================
-            // OWNAR
-            // =====================================
-
-            if (
-                interaction.customId ===
-                "modal_ownar"
-            ) {
-
-                const time =
-                    interaction.fields.getTextInputValue(
-                        "time"
-                    );
-
-                const squadsheet =
-                    interaction.fields.getTextInputValue(
-                        "squadsheet"
-                    );
-
-                return criarTicket(
-                    interaction,
-                    "ownar",
-                    JSON.stringify({
-                        time: time,
-                        squadsheet: squadsheet
-                    })
-                );
-            }
-
-            // =====================================
-            // PARCERIA
-            // =====================================
-
-            if (
-                interaction.customId ===
-                "modal_parceria"
-            ) {
-
-                const parceria =
-                    interaction.fields.getTextInputValue(
-                        "parceria"
-                    );
-
-                return criarTicket(
-                    interaction,
-                    "parceria",
-                    parceria
-                );
-            }
-
-            // =====================================
-            // OUTROS
-            // =====================================
-
-            if (
-                interaction.customId ===
-                "modal_outros"
-            ) {
-
-                const assunto =
-                    interaction.fields.getTextInputValue(
-                        "assunto"
-                    );
-
-                return criarTicket(
-                    interaction,
-                    "outros",
-                    assunto
-                );
-            }
-        }
-
-    } catch (error) {
-
-        console.error(
-            "❌ Erro na interação:",
-            error
-        );
-
-        if (
-            !interaction.replied &&
-            !interaction.deferred
-        ) {
-
-            await interaction.reply({
-                content:
-                    "❌ Ocorreu um erro ao processar esta interação.",
-                ephemeral: true
-            }).catch(() => {});
-        }
     }
-});
+);
+
 
 // =============================================
 // LOGIN
 // =============================================
 
-client.login(config.TOKEN);
+client.login(
+    config.TOKEN
+);
