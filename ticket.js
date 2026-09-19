@@ -17,6 +17,8 @@ const {
     MediaGalleryItemBuilder
 } = require("discord.js");
 
+const path = require("path");
+
 const config = require("./config");
 
 const OWNAR = "cbda69e8d47d4bfacd52cc61947715da";
@@ -325,11 +327,34 @@ async function criarTicket(
 
 
     // ===============================
-    // INFORMAÇÕES DO TICKET
+    // IMAGEM DO TICKET ABERTO
+    // ===============================
+
+    const imagemTicketAberto =
+        new MediaGalleryBuilder()
+            .addItems(
+                new MediaGalleryItemBuilder()
+                    .setURL(
+                        "attachment://ticket_aberto_v2.png"
+                    )
+            );
+
+
+    // ===============================
+    // INFORMAÇÕES + FECHAR TICKET
     // ===============================
 
     const infoContainer =
         new ContainerBuilder()
+
+        // IMAGEM NO TOPO
+        .addMediaGalleryComponents(
+            imagemTicketAberto
+        )
+
+        .addSeparatorComponents(
+            new SeparatorBuilder()
+        )
 
         .addTextDisplayComponents(
 
@@ -358,32 +383,13 @@ async function criarTicket(
                     textoInformacoes
                 )
 
-        );
-
-
-    // ===============================
-    // FECHAR TICKET
-    // ===============================
-
-    const fecharContainer =
-        new ContainerBuilder()
+        )
 
         .addSeparatorComponents(
             new SeparatorBuilder()
         )
 
-        .addTextDisplayComponents(
-
-            new TextDisplayBuilder()
-                .setContent(
-
-                    "## 🔒 ENCERRAMENTO DO TICKET\n\n" +
-
-                    "Gostaria de fechar o ticket?"
-                )
-
-        )
-
+        // BOTÃO FECHAR
         .addActionRowComponents(
 
             new ActionRowBuilder().addComponents(
@@ -401,6 +407,20 @@ async function criarTicket(
                     )
 
             )
+
+        )
+
+        .addSeparatorComponents(
+            new SeparatorBuilder()
+        )
+
+        .addTextDisplayComponents(
+
+            new TextDisplayBuilder()
+                .setContent(
+                    "-# UTL - TICKET SYSTEM"
+                )
+
         );
 
 
@@ -411,8 +431,20 @@ async function criarTicket(
     await channel.send({
 
         components: [
-            infoContainer,
-            fecharContainer
+            infoContainer
+        ],
+
+        files: [
+            {
+                attachment: path.join(
+                    __dirname,
+                    "imagens",
+                    "ticket_aberto_v2.png"
+                ),
+
+                name:
+                    "ticket_aberto_v2.png"
+            }
         ],
 
         flags: 32768
