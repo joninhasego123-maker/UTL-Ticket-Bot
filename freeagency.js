@@ -132,14 +132,9 @@ async function processarFreeagency(interaction) {
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
-                        `**Posição:**\n` +
-                        `\`\`\`st\n${posicao}\n\`\`\`\n\n` +
-
-                        `**Experiência:**\n` +
-                        `\`\`\`st\n${experiencia}\n\`\`\`\n\n` +
-
-                        `**Plataforma:**\n` +
-                        `\`\`\`st\n${plataforma}\n\`\`\``
+                        `**Posição:** \`${posicao}\`\n` +
+                        `**Experiência:** \`${experiencia}\`\n` +
+                        `**Plataforma:** \`${plataforma}\``
                     )
             );
 
@@ -148,7 +143,7 @@ async function processarFreeagency(interaction) {
             .addTextDisplayComponents(
                 new TextDisplayBuilder()
                     .setContent(
-                        `\n**Extra:**\n` +
+                        `**Extra:**\n` +
                         `\`\`\`st\n${extra}\n\`\`\``
                     )
             );
