@@ -728,6 +728,28 @@ client.on(
 // LOGIN
 // =============================================
 
-client.login(
-    config.TOKEN
-);
+client.on("error", error => {
+    console.error("❌ CLIENT ERROR:", error);
+});
+
+client.on("shardError", error => {
+    console.error("❌ SHARD ERROR:", error);
+});
+
+client.on("warn", warning => {
+    console.warn("⚠️ DISCORD WARNING:", warning);
+});
+
+client.on("debug", info => {
+    console.log("🔎 DISCORD DEBUG:", info);
+});
+
+console.log("🔑 Tentando conectar ao Discord...");
+
+client.login(config.TOKEN)
+    .then(() => {
+        console.log("🔑 Login enviado ao Discord.");
+    })
+    .catch(error => {
+        console.error("❌ ERRO AO FAZER LOGIN:", error);
+    });
