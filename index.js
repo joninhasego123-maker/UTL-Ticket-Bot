@@ -667,7 +667,88 @@ client.on("debug", info => {
 });
 
 // =============================================
-// LOGIN
+// TESTE DE CONEXÃO COM DISCORD
+// =============================================
+
+const https = require("https");
+
+console.log(
+    "🌐 Testando conexão HTTP com o Discord..."
+);
+
+https.get(
+    "https://discord.com/api/v10/gateway",
+    response => {
+
+        console.log(
+            `🌐 Discord API respondeu: HTTP ${response.statusCode}`
+        );
+
+        response.resume();
+
+    }
+).on("error", error => {
+
+    console.error(
+        "❌ ERRO NA CONEXÃO HTTP COM DISCORD:",
+        error
+    );
+
+});
+
+
+// =============================================
+// TESTE DIRETO DO GATEWAY
+// =============================================
+
+console.log(
+    "🔌 Testando WebSocket do Discord..."
+);
+
+const discordGateway =
+    new WebSocket(
+        "wss://gateway.discord.gg/?v=10&encoding=json"
+    );
+
+discordGateway.addEventListener(
+    "open",
+    () => {
+
+        console.log(
+            "✅ WEBSOCKET DO DISCORD CONECTOU!"
+        );
+
+        discordGateway.close();
+
+    }
+);
+
+discordGateway.addEventListener(
+    "error",
+    error => {
+
+        console.error(
+            "❌ ERRO NO WEBSOCKET DO DISCORD:",
+            error
+        );
+
+    }
+);
+
+discordGateway.addEventListener(
+    "close",
+    event => {
+
+        console.log(
+            `🔌 WebSocket fechado. Código: ${event.code}`
+        );
+
+    }
+);
+
+
+// =============================================
+// LOGIN DO BOT
 // =============================================
 
 console.log(
