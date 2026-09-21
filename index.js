@@ -43,7 +43,6 @@ const {
     processarFreeagency
 } = require("./freeagency");
 
-
 // =============================================
 // CLIENT
 // =============================================
@@ -51,11 +50,9 @@ const {
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers,
         GatewayIntentBits.DirectMessages
     ]
 });
-
 
 // =============================================
 // RENDER
@@ -70,6 +67,7 @@ const server = http.createServer((req, res) => {
     });
 
     res.end("Bot online!");
+
 });
 
 server.listen(PORT, () => {
@@ -79,7 +77,6 @@ server.listen(PORT, () => {
     );
 
 });
-
 
 // =============================================
 // READY
@@ -105,20 +102,20 @@ client.once("ready", async () => {
 
             {
                 name: "ticket",
+
                 description:
                     "Envia o painel de Tickets da UTL.",
 
                 default_member_permissions:
                     PermissionFlagsBits.Administrator.toString()
-            },
 
+            },
 
             // =====================================
             // FREE AGENCY
             // =====================================
 
             freeagencyCommand.toJSON(),
-
 
             // =====================================
             // CONTRACTS
@@ -129,7 +126,6 @@ client.once("ready", async () => {
             )
 
         ];
-
 
         await rest.put(
 
@@ -142,7 +138,6 @@ client.once("ready", async () => {
             }
 
         );
-
 
         console.log(
             "✅ Comandos Slash registrados com sucesso."
@@ -159,7 +154,6 @@ client.once("ready", async () => {
 
 });
 
-
 // =============================================
 // INTERAÇÕES
 // =============================================
@@ -174,9 +168,7 @@ client.on(
             // BOTÕES
             // =========================================
 
-            if (
-                interaction.isButton()
-            ) {
+            if (interaction.isButton()) {
 
                 // =====================================
                 // CONTRACT
@@ -204,16 +196,13 @@ client.on(
 
                 }
 
-
                 // =====================================
                 // FECHAR TICKET
                 // =====================================
 
                 if (
-
                     interaction.customId ===
                     "fechar_ticket"
-
                 ) {
 
                     await interaction.reply({
@@ -224,7 +213,6 @@ client.on(
                         ephemeral: true
 
                     });
-
 
                     setTimeout(
                         async () => {
@@ -237,40 +225,31 @@ client.on(
                         2000
                     );
 
-
                     return;
 
                 }
 
             }
 
-
             // =========================================
             // SLASH COMMANDS
             // =========================================
 
-            if (
-                interaction.isChatInputCommand()
-            ) {
-
+            if (interaction.isChatInputCommand()) {
 
                 // =====================================
                 // TICKET
                 // =====================================
 
                 if (
-
                     interaction.commandName ===
                     "ticket"
-
                 ) {
 
                     if (
-
                         !interaction.memberPermissions.has(
                             PermissionFlagsBits.Administrator
                         )
-
                     ) {
 
                         return interaction.reply({
@@ -284,12 +263,10 @@ client.on(
 
                     }
 
-
                     const channel =
                         await client.channels.fetch(
                             config.TICKET_PANEL_CHANNEL_ID
                         );
-
 
                     if (!channel) {
 
@@ -304,18 +281,15 @@ client.on(
 
                     }
 
-
                     await channel.send({
 
                         components: [
                             criarPainelTickets()
                         ],
 
-
                         files: [
 
                             {
-
                                 attachment:
                                     path.join(
                                         __dirname,
@@ -325,12 +299,9 @@ client.on(
 
                                 name:
                                     "ticket_topo.png"
-
                             },
 
-
                             {
-
                                 attachment:
                                     path.join(
                                         __dirname,
@@ -340,16 +311,13 @@ client.on(
 
                                 name:
                                     "utl_logo.png"
-
                             }
 
                         ],
 
-
                         flags: 32768
 
                     });
-
 
                     return interaction.reply({
 
@@ -362,16 +330,13 @@ client.on(
 
                 }
 
-
                 // =====================================
                 // FREE AGENCY
                 // =====================================
 
                 if (
-
                     interaction.commandName ===
                     "freeagency"
-
                 ) {
 
                     return executarFreeagency(
@@ -380,16 +345,13 @@ client.on(
 
                 }
 
-
                 // =====================================
                 // PERM
                 // =====================================
 
                 if (
-
                     interaction.commandName ===
                     "perm"
-
                 ) {
 
                     return executarPerm(
@@ -398,16 +360,13 @@ client.on(
 
                 }
 
-
                 // =====================================
                 // UNPERM
                 // =====================================
 
                 if (
-
                     interaction.commandName ===
                     "unperm"
-
                 ) {
 
                     return executarUnperm(
@@ -416,16 +375,13 @@ client.on(
 
                 }
 
-
                 // =====================================
                 // PERMLIST
                 // =====================================
 
                 if (
-
                     interaction.commandName ===
                     "permlist"
-
                 ) {
 
                     return executarPermlist(
@@ -434,16 +390,13 @@ client.on(
 
                 }
 
-
                 // =====================================
                 // CONTRACT
                 // =====================================
 
                 if (
-
                     interaction.commandName ===
                     "contract"
-
                 ) {
 
                     return executarContract(
@@ -452,16 +405,13 @@ client.on(
 
                 }
 
-
                 // =====================================
                 // RELEASE
                 // =====================================
 
                 if (
-
                     interaction.commandName ===
                     "release"
-
                 ) {
 
                     return executarRelease(
@@ -472,7 +422,6 @@ client.on(
 
             }
 
-
             // =========================================
             // MENU DE TICKETS
             // =========================================
@@ -482,15 +431,12 @@ client.on(
             ) {
 
                 if (
-
                     interaction.customId ===
                     "ticket_menu"
-
                 ) {
 
                     const value =
                         interaction.values[0];
-
 
                     // =================================
                     // OWNAR
@@ -506,7 +452,6 @@ client.on(
 
                     }
 
-
                     // =================================
                     // PARCERIA
                     // =================================
@@ -521,7 +466,6 @@ client.on(
 
                     }
 
-
                     // =================================
                     // DENÚNCIA
                     // =================================
@@ -531,15 +475,11 @@ client.on(
                     ) {
 
                         return criarTicket(
-
                             interaction,
-
                             "denuncia"
-
                         );
 
                     }
-
 
                     // =================================
                     // OUTROS
@@ -559,7 +499,6 @@ client.on(
 
             }
 
-
             // =========================================
             // MODAIS
             // =========================================
@@ -568,16 +507,13 @@ client.on(
                 interaction.isModalSubmit()
             ) {
 
-
                 // =====================================
                 // FREE AGENCY
                 // =====================================
 
                 if (
-
                     interaction.customId ===
                     "modal_freeagency"
-
                 ) {
 
                     return processarFreeagency(
@@ -586,16 +522,13 @@ client.on(
 
                 }
 
-
                 // =====================================
                 // OWNAR
                 // =====================================
 
                 if (
-
                     interaction.customId ===
                     "modal_ownar"
-
                 ) {
 
                     const time =
@@ -603,43 +536,29 @@ client.on(
                             "time"
                         );
 
-
                     const squadsheet =
                         interaction.fields.getTextInputValue(
                             "squadsheet"
                         );
 
-
                     return criarTicket(
-
                         interaction,
-
                         "ownar",
-
                         JSON.stringify({
-
-                            time:
-                                time,
-
-                            squadsheet:
-                                squadsheet
-
+                            time: time,
+                            squadsheet: squadsheet
                         })
-
                     );
 
                 }
-
 
                 // =====================================
                 // PARCERIA
                 // =====================================
 
                 if (
-
                     interaction.customId ===
                     "modal_parceria"
-
                 ) {
 
                     const parceria =
@@ -647,29 +566,21 @@ client.on(
                             "parceria"
                         );
 
-
                     return criarTicket(
-
                         interaction,
-
                         "parceria",
-
                         parceria
-
                     );
 
                 }
-
 
                 // =====================================
                 // OUTROS
                 // =====================================
 
                 if (
-
                     interaction.customId ===
                     "modal_outros"
-
                 ) {
 
                     const assunto =
@@ -677,15 +588,10 @@ client.on(
                             "assunto"
                         );
 
-
                     return criarTicket(
-
                         interaction,
-
                         "outros",
-
                         assunto
-
                     );
 
                 }
@@ -699,12 +605,9 @@ client.on(
                 error
             );
 
-
             if (
-
                 !interaction.replied &&
                 !interaction.deferred
-
             ) {
 
                 await interaction.reply({
@@ -723,33 +626,67 @@ client.on(
     }
 );
 
+// =============================================
+// ERROS / DIAGNÓSTICO
+// =============================================
+
+client.on("error", error => {
+
+    console.error(
+        "❌ CLIENT ERROR:",
+        error
+    );
+
+});
+
+client.on("shardError", error => {
+
+    console.error(
+        "❌ SHARD ERROR:",
+        error
+    );
+
+});
+
+client.on("warn", warning => {
+
+    console.warn(
+        "⚠️ DISCORD WARNING:",
+        warning
+    );
+
+});
+
+client.on("debug", info => {
+
+    console.log(
+        "🔎 DISCORD DEBUG:",
+        info
+    );
+
+});
 
 // =============================================
 // LOGIN
 // =============================================
 
-client.on("error", error => {
-    console.error("❌ CLIENT ERROR:", error);
-});
-
-client.on("shardError", error => {
-    console.error("❌ SHARD ERROR:", error);
-});
-
-client.on("warn", warning => {
-    console.warn("⚠️ DISCORD WARNING:", warning);
-});
-
-client.on("debug", info => {
-    console.log("🔎 DISCORD DEBUG:", info);
-});
-
-console.log("🔑 Tentando conectar ao Discord...");
+console.log(
+    "🔑 Tentando conectar ao Discord..."
+);
 
 client.login(config.TOKEN)
     .then(() => {
-        console.log("🔑 Login enviado ao Discord.");
+
+        console.log(
+            "🔑 Login enviado ao Discord."
+        );
+
     })
     .catch(error => {
-        console.error("❌ ERRO AO FAZER LOGIN:", error);
+
+        console.error(
+            "❌ ERRO AO FAZER LOGIN:",
+            error
+        );
+
     });
