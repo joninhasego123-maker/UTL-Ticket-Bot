@@ -7,10 +7,13 @@ const {
 } = require("discord.js");
 
 const http = require("http");
-const https = require("https");
 const path = require("path");
 
 const config = require("./config");
+
+// =============================================
+// TICKETS
+// =============================================
 
 const {
     criarPainelTickets,
@@ -23,6 +26,10 @@ const {
     DENUNCIA,
     OUTROS
 } = require("./ticket");
+
+// =============================================
+// CONTRACTS
+// =============================================
 
 const {
     contractCommands,
@@ -80,7 +87,7 @@ server.listen(PORT, () => {
 });
 
 // =============================================
-// READY
+// BOT PRONTO
 // =============================================
 
 client.once("ready", async () => {
@@ -168,7 +175,7 @@ client.on(
     async interaction => {
 
         // =========================================
-        // LOG DE INTERAÇÃO RECEBIDA
+        // LOG DA INTERAÇÃO
         // =========================================
 
         let nomeInteracao = "sem nome";
@@ -178,23 +185,17 @@ client.on(
             nomeInteracao =
                 `/${interaction.commandName}`;
 
-        } else if (
-            interaction.isButton()
-        ) {
+        } else if (interaction.isButton()) {
 
             nomeInteracao =
                 `botão: ${interaction.customId}`;
 
-        } else if (
-            interaction.isStringSelectMenu()
-        ) {
+        } else if (interaction.isStringSelectMenu()) {
 
             nomeInteracao =
                 `menu: ${interaction.customId}`;
 
-        } else if (
-            interaction.isModalSubmit()
-        ) {
+        } else if (interaction.isModalSubmit()) {
 
             nomeInteracao =
                 `modal: ${interaction.customId}`;
@@ -410,7 +411,7 @@ client.on(
                 ) {
 
                     console.log(
-                        "⚙️ Abrindo Free Agency..."
+                        "⚙️ Executando /freeagency..."
                     );
 
                     return executarFreeagency(
@@ -790,7 +791,7 @@ client.on(
 );
 
 // =============================================
-// ERROS / DIAGNÓSTICO
+// ERROS DO CLIENT
 // =============================================
 
 client.on(
@@ -829,218 +830,29 @@ client.on(
     }
 );
 
-client.on(
-    "debug",
-    info => {
-
-        console.log(
-            "🔎 DISCORD DEBUG:",
-            info
-        );
-
-    }
-);
-
 // =============================================
-// TESTE DE CONEXÃO HTTP COM DISCORD
-// =============================================
-
-console.log(
-    "🌐 Testando conexão HTTP com o Discord..."
-);
-
-https.get(
-    "https://discord.com/api/v10/gateway",
-    response => {
-
-        console.log(
-            `🌐 Discord API respondeu: HTTP ${response.statusCode}`
-        );
-
-        response.resume();
-
-    }
-).on(
-    "error",
-    error => {
-
-        console.error(
-            "❌ ERRO NA CONEXÃO HTTP COM DISCORD:",
-            error
-        );
-
-    }
-);
-
-// =============================================
-// TESTE AUTENTICADO DO TOKEN
-// =============================================
-
-console.log(
-    "🔐 Testando TOKEN na Discord API..."
-);
-
-const tokenRequest = https.request(
-
-    {
-        hostname: "discord.com",
-
-        path: "/api/v10/gateway/bot",
-
-        method: "GET",
-
-        headers: {
-            Authorization:
-                `Bot ${config.TOKEN}`
-        }
-
-    },
-
-    response => {
-
-        console.log(
-            `🔐 Gateway Bot respondeu: HTTP ${response.statusCode}`
-        );
-
-        let data = "";
-
-        response.on(
-            "data",
-            chunk => {
-
-                data += chunk;
-
-            }
-        );
-
-        response.on(
-            "end",
-            () => {
-
-                try {
-
-                    const result =
-                        JSON.parse(data);
-
-                    // =================================
-                    // TOKEN OK
-                    // =================================
-
-                    if (
-                        response.statusCode ===
-                        200
-                    ) {
-
-                        console.log(
-                            "✅ TOKEN ACEITO PELA DISCORD API."
-                        );
-
-                        console.log(
-                            `🌐 Gateway: ${result.url}`
-                        );
-
-                        console.log(
-                            `🤖 Shards recomendados: ${result.shards}`
-                        );
-
-                        if (
-                            result.session_start_limit
-                        ) {
-
-                            console.log(
-                                `📊 Sessões restantes: ${result.session_start_limit.remaining}`
-                            );
-
-                            console.log(
-                                `📊 Limite total: ${result.session_start_limit.total}`
-                            );
-
-                            console.log(
-                                `📊 Reset em: ${result.session_start_limit.reset_after}ms`
-                            );
-
-                        }
-
-                    }
-
-                    // =================================
-                    // TOKEN INVÁLIDO
-                    // =================================
-
-                    else {
-
-                        console.error(
-                            "❌ TOKEN REJEITADO PELA DISCORD API:"
-                        );
-
-                        console.error(
-                            result
-                        );
-
-                    }
-
-                } catch (error) {
-
-                    console.error(
-                        "❌ Resposta inesperada da Discord API:"
-                    );
-
-                    console.error(
-                        data
-                    );
-
-                }
-
-            }
-        );
-
-    }
-
-);
-
-tokenRequest.on(
-    "error",
-    error => {
-
-        console.error(
-            "❌ ERRO AO TESTAR TOKEN:",
-            error
-        );
-
-    }
-);
-
-tokenRequest.end();
-
-// =============================================
-// LOGIN DO BOT
+// LOGIN
 // =============================================
 
 console.log(
     "🔑 Tentando conectar ao Discord..."
 );
 
-client.login(
-    config.TOKEN
-)
+client.login(config.TOKEN)
 
-.then(
-    () => {
+    .then(() => {
 
         console.log(
             "🔑 Login enviado ao Discord."
         );
 
-    }
-)
+    })
 
-.catch(
-    error => {
+    .catch(error => {
 
         console.error(
             "❌ ERRO AO FAZER LOGIN:",
             error
         );
 
-    }
-);
+    });
