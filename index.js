@@ -167,6 +167,44 @@ client.on(
     "interactionCreate",
     async interaction => {
 
+        // =========================================
+        // LOG DE INTERAÇÃO RECEBIDA
+        // =========================================
+
+        let nomeInteracao = "sem nome";
+
+        if (interaction.isChatInputCommand()) {
+
+            nomeInteracao =
+                `/${interaction.commandName}`;
+
+        } else if (
+            interaction.isButton()
+        ) {
+
+            nomeInteracao =
+                `botão: ${interaction.customId}`;
+
+        } else if (
+            interaction.isStringSelectMenu()
+        ) {
+
+            nomeInteracao =
+                `menu: ${interaction.customId}`;
+
+        } else if (
+            interaction.isModalSubmit()
+        ) {
+
+            nomeInteracao =
+                `modal: ${interaction.customId}`;
+
+        }
+
+        console.log(
+            `📩 INTERAÇÃO RECEBIDA: ${nomeInteracao}`
+        );
+
         try {
 
             // =========================================
@@ -193,8 +231,16 @@ client.on(
 
                 ) {
 
+                    console.log(
+                        `⚙️ Processando botão de contrato: ${interaction.customId}`
+                    );
+
                     await processarBotaoContrato(
                         interaction
+                    );
+
+                    console.log(
+                        `✅ Botão de contrato processado: ${interaction.customId}`
                     );
 
                     return;
@@ -210,6 +256,10 @@ client.on(
                     "fechar_ticket"
                 ) {
 
+                    console.log(
+                        "🔒 Fechando ticket..."
+                    );
+
                     await interaction.reply({
 
                         content:
@@ -224,7 +274,14 @@ client.on(
 
                             await interaction.channel
                                 .delete()
-                                .catch(() => {});
+                                .catch(error => {
+
+                                    console.error(
+                                        "❌ Erro ao excluir ticket:",
+                                        error
+                                    );
+
+                                });
 
                         },
                         2000
@@ -241,6 +298,10 @@ client.on(
             // =========================================
 
             if (interaction.isChatInputCommand()) {
+
+                console.log(
+                    `⚙️ Processando comando ${interaction.commandName}...`
+                );
 
                 // =====================================
                 // TICKET
@@ -324,6 +385,10 @@ client.on(
 
                     });
 
+                    console.log(
+                        "✅ Painel de Tickets enviado."
+                    );
+
                     return interaction.reply({
 
                         content:
@@ -344,6 +409,10 @@ client.on(
                     "freeagency"
                 ) {
 
+                    console.log(
+                        "⚙️ Abrindo Free Agency..."
+                    );
+
                     return executarFreeagency(
                         interaction
                     );
@@ -358,6 +427,10 @@ client.on(
                     interaction.commandName ===
                     "perm"
                 ) {
+
+                    console.log(
+                        "⚙️ Executando /perm..."
+                    );
 
                     return executarPerm(
                         interaction
@@ -374,6 +447,10 @@ client.on(
                     "unperm"
                 ) {
 
+                    console.log(
+                        "⚙️ Executando /unperm..."
+                    );
+
                     return executarUnperm(
                         interaction
                     );
@@ -388,6 +465,10 @@ client.on(
                     interaction.commandName ===
                     "permlist"
                 ) {
+
+                    console.log(
+                        "⚙️ Executando /permlist..."
+                    );
 
                     return executarPermlist(
                         interaction
@@ -404,6 +485,10 @@ client.on(
                     "contract"
                 ) {
 
+                    console.log(
+                        "⚙️ Executando /contract..."
+                    );
+
                     return executarContract(
                         interaction
                     );
@@ -418,6 +503,10 @@ client.on(
                     interaction.commandName ===
                     "release"
                 ) {
+
+                    console.log(
+                        "⚙️ Executando /release..."
+                    );
 
                     return executarRelease(
                         interaction
@@ -443,6 +532,10 @@ client.on(
                     const value =
                         interaction.values[0];
 
+                    console.log(
+                        `🎫 Opção de ticket selecionada: ${value}`
+                    );
+
                     // =================================
                     // OWNAR
                     // =================================
@@ -450,6 +543,10 @@ client.on(
                     if (
                         value === OWNAR
                     ) {
+
+                        console.log(
+                            "👑 Abrindo modal Ownar..."
+                        );
 
                         return interaction.showModal(
                             modalOwnar()
@@ -465,6 +562,10 @@ client.on(
                         value === PARCERIA
                     ) {
 
+                        console.log(
+                            "🤝 Abrindo modal Parceria..."
+                        );
+
                         return interaction.showModal(
                             modalParceria()
                         );
@@ -478,6 +579,10 @@ client.on(
                     if (
                         value === DENUNCIA
                     ) {
+
+                        console.log(
+                            "🚨 Criando ticket de denúncia..."
+                        );
 
                         return criarTicket(
                             interaction,
@@ -493,6 +598,10 @@ client.on(
                     if (
                         value === OUTROS
                     ) {
+
+                        console.log(
+                            "📩 Abrindo modal Outros..."
+                        );
 
                         return interaction.showModal(
                             modalOutros()
@@ -512,6 +621,10 @@ client.on(
                 interaction.isModalSubmit()
             ) {
 
+                console.log(
+                    `📝 Modal recebido: ${interaction.customId}`
+                );
+
                 // =====================================
                 // FREE AGENCY
                 // =====================================
@@ -520,6 +633,10 @@ client.on(
                     interaction.customId ===
                     "modal_freeagency"
                 ) {
+
+                    console.log(
+                        "⚽ Processando formulário Free Agency..."
+                    );
 
                     return processarFreeagency(
                         interaction
@@ -546,6 +663,10 @@ client.on(
                             "squadsheet"
                         );
 
+                    console.log(
+                        "👑 Criando ticket de Ownar..."
+                    );
+
                     return criarTicket(
                         interaction,
                         "ownar",
@@ -571,6 +692,10 @@ client.on(
                             "parceria"
                         );
 
+                    console.log(
+                        "🤝 Criando ticket de Parceria..."
+                    );
+
                     return criarTicket(
                         interaction,
                         "parceria",
@@ -593,6 +718,10 @@ client.on(
                             "assunto"
                         );
 
+                    console.log(
+                        "📩 Criando ticket de Outros..."
+                    );
+
                     return criarTicket(
                         interaction,
                         "outros",
@@ -606,8 +735,28 @@ client.on(
         } catch (error) {
 
             console.error(
-                "❌ Erro na interação:",
+                "❌ ERRO NA INTERAÇÃO:",
                 error
+            );
+
+            console.error(
+                "📌 Tipo:",
+                interaction.type
+            );
+
+            console.error(
+                "📌 ID:",
+                interaction.id
+            );
+
+            console.error(
+                "📌 Custom ID:",
+                interaction.customId || "nenhum"
+            );
+
+            console.error(
+                "📌 Comando:",
+                interaction.commandName || "nenhum"
             );
 
             if (
@@ -622,7 +771,16 @@ client.on(
 
                     ephemeral: true
 
-                }).catch(() => {});
+                }).catch(
+                    replyError => {
+
+                        console.error(
+                            "❌ Não foi possível responder à interação:",
+                            replyError
+                        );
+
+                    }
+                );
 
             }
 
@@ -635,41 +793,53 @@ client.on(
 // ERROS / DIAGNÓSTICO
 // =============================================
 
-client.on("error", error => {
+client.on(
+    "error",
+    error => {
 
-    console.error(
-        "❌ CLIENT ERROR:",
-        error
-    );
+        console.error(
+            "❌ CLIENT ERROR:",
+            error
+        );
 
-});
+    }
+);
 
-client.on("shardError", error => {
+client.on(
+    "shardError",
+    error => {
 
-    console.error(
-        "❌ SHARD ERROR:",
-        error
-    );
+        console.error(
+            "❌ SHARD ERROR:",
+            error
+        );
 
-});
+    }
+);
 
-client.on("warn", warning => {
+client.on(
+    "warn",
+    warning => {
 
-    console.warn(
-        "⚠️ DISCORD WARNING:",
-        warning
-    );
+        console.warn(
+            "⚠️ DISCORD WARNING:",
+            warning
+        );
 
-});
+    }
+);
 
-client.on("debug", info => {
+client.on(
+    "debug",
+    info => {
 
-    console.log(
-        "🔎 DISCORD DEBUG:",
-        info
-    );
+        console.log(
+            "🔎 DISCORD DEBUG:",
+            info
+        );
 
-});
+    }
+);
 
 // =============================================
 // TESTE DE CONEXÃO HTTP COM DISCORD
@@ -690,14 +860,17 @@ https.get(
         response.resume();
 
     }
-).on("error", error => {
+).on(
+    "error",
+    error => {
 
-    console.error(
-        "❌ ERRO NA CONEXÃO HTTP COM DISCORD:",
-        error
-    );
+        console.error(
+            "❌ ERRO NA CONEXÃO HTTP COM DISCORD:",
+            error
+        );
 
-});
+    }
+);
 
 // =============================================
 // TESTE AUTENTICADO DO TOKEN
@@ -720,6 +893,7 @@ const tokenRequest = https.request(
             Authorization:
                 `Bot ${config.TOKEN}`
         }
+
     },
 
     response => {
@@ -846,21 +1020,27 @@ console.log(
     "🔑 Tentando conectar ao Discord..."
 );
 
-client.login(config.TOKEN)
+client.login(
+    config.TOKEN
+)
 
-    .then(() => {
+.then(
+    () => {
 
         console.log(
             "🔑 Login enviado ao Discord."
         );
 
-    })
+    }
+)
 
-    .catch(error => {
+.catch(
+    error => {
 
         console.error(
             "❌ ERRO AO FAZER LOGIN:",
             error
         );
 
-    });
+    }
+);
