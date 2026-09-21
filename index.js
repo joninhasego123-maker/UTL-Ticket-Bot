@@ -7,6 +7,7 @@ const {
 } = require("discord.js");
 
 const http = require("http");
+const https = require("https");
 const path = require("path");
 
 const config = require("./config");
@@ -126,6 +127,10 @@ client.once("ready", async () => {
             )
 
         ];
+
+        console.log(
+            `📦 Registrando ${commands.length} comandos Slash...`
+        );
 
         await rest.put(
 
@@ -667,10 +672,8 @@ client.on("debug", info => {
 });
 
 // =============================================
-// TESTE DE CONEXÃO COM DISCORD
+// TESTE DE CONEXÃO HTTP COM DISCORD
 // =============================================
-
-const https = require("https");
 
 console.log(
     "🌐 Testando conexão HTTP com o Discord..."
@@ -696,56 +699,144 @@ https.get(
 
 });
 
-
 // =============================================
-// TESTE DIRETO DO GATEWAY
+// TESTE AUTENTICADO DO TOKEN
 // =============================================
 
 console.log(
-    "🔌 Testando WebSocket do Discord..."
+    "🔐 Testando TOKEN na Discord API..."
 );
 
-const discordGateway =
-    new WebSocket(
-        "wss://gateway.discord.gg/?v=10&encoding=json"
-    );
+const tokenRequest = https.request(
 
-discordGateway.addEventListener(
-    "open",
-    () => {
+    {
+        hostname: "discord.com",
+
+        path: "/api/v10/gateway/bot",
+
+        method: "GET",
+
+        headers: {
+            Authorization:
+                `Bot ${config.TOKEN}`
+        }
+    },
+
+    response => {
 
         console.log(
-            "✅ WEBSOCKET DO DISCORD CONECTOU!"
+            `🔐 Gateway Bot respondeu: HTTP ${response.statusCode}`
         );
 
-        discordGateway.close();
+        let data = "";
+
+        response.on(
+            "data",
+            chunk => {
+
+                data += chunk;
+
+            }
+        );
+
+        response.on(
+            "end",
+            () => {
+
+                try {
+
+                    const result =
+                        JSON.parse(data);
+
+                    // =================================
+                    // TOKEN OK
+                    // =================================
+
+                    if (
+                        response.statusCode ===
+                        200
+                    ) {
+
+                        console.log(
+                            "✅ TOKEN ACEITO PELA DISCORD API."
+                        );
+
+                        console.log(
+                            `🌐 Gateway: ${result.url}`
+                        );
+
+                        console.log(
+                            `🤖 Shards recomendados: ${result.shards}`
+                        );
+
+                        if (
+                            result.session_start_limit
+                        ) {
+
+                            console.log(
+                                `📊 Sessões restantes: ${result.session_start_limit.remaining}`
+                            );
+
+                            console.log(
+                                `📊 Limite total: ${result.session_start_limit.total}`
+                            );
+
+                            console.log(
+                                `📊 Reset em: ${result.session_start_limit.reset_after}ms`
+                            );
+
+                        }
+
+                    }
+
+                    // =================================
+                    // TOKEN INVÁLIDO
+                    // =================================
+
+                    else {
+
+                        console.error(
+                            "❌ TOKEN REJEITADO PELA DISCORD API:"
+                        );
+
+                        console.error(
+                            result
+                        );
+
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ Resposta inesperada da Discord API:"
+                    );
+
+                    console.error(
+                        data
+                    );
+
+                }
+
+            }
+        );
 
     }
+
 );
 
-discordGateway.addEventListener(
+tokenRequest.on(
     "error",
     error => {
 
         console.error(
-            "❌ ERRO NO WEBSOCKET DO DISCORD:",
+            "❌ ERRO AO TESTAR TOKEN:",
             error
         );
 
     }
 );
 
-discordGateway.addEventListener(
-    "close",
-    event => {
-
-        console.log(
-            `🔌 WebSocket fechado. Código: ${event.code}`
-        );
-
-    }
-);
-
+tokenRequest.end();
 
 // =============================================
 // LOGIN DO BOT
@@ -756,6 +847,7 @@ console.log(
 );
 
 client.login(config.TOKEN)
+
     .then(() => {
 
         console.log(
@@ -763,6 +855,7 @@ client.login(config.TOKEN)
         );
 
     })
+
     .catch(error => {
 
         console.error(
