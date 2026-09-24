@@ -13,11 +13,11 @@ const supabase = require("./supabase");
 const config = require("./config");
 
 // =====================================================
-// CANAL PÚBLICO DOS CONTRATOS
+// CANAL DE LOGS DOS CONTRATOS
 // =====================================================
 
-const CONTRACT_PUBLIC_CHANNEL_ID =
-    config.CONTRACT_PUBLIC_CHANNEL_ID;
+const CONTRACT_LOG_CHANNEL_ID =
+    "1552634532262584391";
 
 // =====================================================
 // POSIÇÕES
@@ -277,7 +277,7 @@ function criarContratoContainer(
         .addTextDisplayComponents(
             new TextDisplayBuilder()
                 .setContent(
-                    "-# UTL - CONTRACT SYSTEM"
+                    "-# VTL - CONTRACT SYSTEM"
                 )
         );
 }
@@ -545,7 +545,7 @@ async function executarPermlist(interaction) {
                 .addTextDisplayComponents(
                     new TextDisplayBuilder()
                         .setContent(
-                            "-# UTL - CONTRACT SYSTEM"
+                            "-# VTL - CONTRACT SYSTEM"
                         )
                 );
 
@@ -688,7 +688,7 @@ async function executarContract(interaction) {
 
             return interaction.reply({
                 content:
-                    "❌ Esse jogador precisa estar no servidor da UTL.",
+                    "❌ Esse jogador precisa estar no servidor da VTL.",
                 ephemeral: true
             });
         }
@@ -758,35 +758,25 @@ async function executarContract(interaction) {
             );
 
         // =============================================
-        // ENVIAR NO CANAL PÚBLICO
+        // ENVIAR NO MESMO CHAT DO COMANDO
         // =============================================
 
         let canalEnviado = false;
 
         try {
 
-            if (!CONTRACT_PUBLIC_CHANNEL_ID) {
-
-                throw new Error(
-                    "CONTRACT_PUBLIC_CHANNEL_ID não está configurado no config.js"
-                );
-            }
-
             const channel =
-                await interaction.client.channels
-                    .fetch(
-                        CONTRACT_PUBLIC_CHANNEL_ID
-                    );
+                interaction.channel;
 
             if (!channel) {
 
                 throw new Error(
-                    `Canal ${CONTRACT_PUBLIC_CHANNEL_ID} não encontrado.`
+                    "Canal da interação não encontrado."
                 );
             }
 
             console.log(
-                `📢 Tentando enviar contrato no canal ${CONTRACT_PUBLIC_CHANNEL_ID}...`
+                `📢 Enviando contrato no canal onde /contract foi usado: ${channel.id}`
             );
 
             await channel.send({
@@ -801,13 +791,13 @@ async function executarContract(interaction) {
             canalEnviado = true;
 
             console.log(
-                `✅ Contrato enviado no canal ${CONTRACT_PUBLIC_CHANNEL_ID}.`
+                `✅ Contrato enviado no canal ${channel.id}.`
             );
 
         } catch (channelError) {
 
             console.error(
-                "❌ ERRO AO ENVIAR CONTRATO NO CANAL:",
+                "❌ ERRO AO ENVIAR CONTRATO NO CHAT:",
                 channelError
             );
         }
@@ -840,7 +830,6 @@ async function executarContract(interaction) {
             console.log(
                 `⚠️ Não foi possível enviar DM para ${player.tag}.`
             );
-
         }
 
         // =============================================
@@ -854,7 +843,7 @@ async function executarContract(interaction) {
 
             return interaction.reply({
                 content:
-                    `✅ Contrato enviado para ${player} na DM e no canal <#${CONTRACT_PUBLIC_CHANNEL_ID}>.`,
+                    `✅ Contrato enviado no chat e na DM de ${player}.`,
                 ephemeral: true
             });
         }
@@ -866,7 +855,7 @@ async function executarContract(interaction) {
 
             return interaction.reply({
                 content:
-                    `✅ Contrato enviado no canal <#${CONTRACT_PUBLIC_CHANNEL_ID}>.\n⚠️ A DM de ${player} está fechada ou indisponível.`,
+                    `✅ Contrato enviado no chat.\n⚠️ A DM de ${player} está fechada ou indisponível.`,
                 ephemeral: true
             });
         }
@@ -878,14 +867,14 @@ async function executarContract(interaction) {
 
             return interaction.reply({
                 content:
-                    `⚠️ Contrato enviado para ${player} na DM, mas não consegui enviar no canal <#${CONTRACT_PUBLIC_CHANNEL_ID}>.\n\nVerifique as permissões do bot nesse canal.`,
+                    `⚠️ Contrato enviado para ${player} na DM, mas não consegui enviar no chat.`,
                 ephemeral: true
             });
         }
 
         return interaction.reply({
             content:
-                "❌ Não consegui enviar o contrato nem na DM nem no canal.",
+                "❌ Não consegui enviar o contrato.",
             ephemeral: true
         });
 
@@ -1053,6 +1042,10 @@ async function processarBotaoContrato(interaction) {
                 });
             }
 
+            // =========================================
+            // LOG SOMENTE DO RESULTADO
+            // =========================================
+
             await registrarContrato(
                 interaction,
                 contract,
@@ -1090,7 +1083,7 @@ async function processarBotaoContrato(interaction) {
                         .addTextDisplayComponents(
                             new TextDisplayBuilder()
                                 .setContent(
-                                    "-# UTL - CONTRACT SYSTEM"
+                                    "-# VTL - CONTRACT SYSTEM"
                                 )
                         )
                 ],
@@ -1129,7 +1122,7 @@ async function processarBotaoContrato(interaction) {
 
                 return interaction.reply({
                     content:
-                        "❌ Não consegui encontrar o servidor da UTL.",
+                        "❌ Não consegui encontrar o servidor da VTL.",
                     ephemeral: true
                 });
             }
@@ -1149,7 +1142,7 @@ async function processarBotaoContrato(interaction) {
 
                 return interaction.reply({
                     content:
-                        "❌ Você precisa estar no servidor da UTL para aceitar o contrato.",
+                        "❌ Você precisa estar no servidor da VTL para aceitar o contrato.",
                     ephemeral: true
                 });
             }
@@ -1245,7 +1238,7 @@ async function processarBotaoContrato(interaction) {
             }
 
             // =========================================
-            // LOG
+            // LOG SOMENTE DO RESULTADO
             // =========================================
 
             await registrarContrato(
@@ -1271,7 +1264,7 @@ async function processarBotaoContrato(interaction) {
                     : "Cargo";
 
             // =========================================
-            // ATUALIZAR MENSAGEM
+            // ATUALIZAR MENSAGEM DO CONTRATO
             // =========================================
 
             return interaction.update({
@@ -1318,7 +1311,7 @@ async function processarBotaoContrato(interaction) {
                         .addTextDisplayComponents(
                             new TextDisplayBuilder()
                                 .setContent(
-                                    "-# UTL - CONTRACT SYSTEM"
+                                    "-# VTL - CONTRACT SYSTEM"
                                 )
                         )
                 ],
@@ -1363,14 +1356,14 @@ async function registrarContrato(
         const channel =
             await interaction.client.channels
                 .fetch(
-                    config.CONTRACT_LOG_CHANNEL_ID
+                    CONTRACT_LOG_CHANNEL_ID
                 )
                 .catch(() => null);
 
         if (!channel) {
 
             console.error(
-                "❌ Canal de log não encontrado."
+                `❌ Canal de log ${CONTRACT_LOG_CHANNEL_ID} não encontrado.`
             );
 
             return;
@@ -1406,6 +1399,10 @@ async function registrarContrato(
                 }
             }
         }
+
+        // =============================================
+        // CRIAR LOG
+        // =============================================
 
         const container =
             new ContainerBuilder()
@@ -1443,7 +1440,7 @@ async function registrarContrato(
                 .addTextDisplayComponents(
                     new TextDisplayBuilder()
                         .setContent(
-                            "-# UTL - CONTRACT SYSTEM"
+                            "-# VTL - CONTRACT SYSTEM"
                         )
                 );
 
