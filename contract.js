@@ -10,12 +10,16 @@ const {
 } = require("discord.js");
 
 const supabase = require("./supabase");
-const config = require("./config");
 
 // =====================================================
-// CANAL DE LOGS DOS CONTRATOS
+// CANAIS
 // =====================================================
 
+// Canal onde os comandos de contrato podem ser usados
+const CONTRACT_CHANNEL_ID =
+    "1552636518886019072";
+
+// Canal onde ficam SOMENTE os resultados dos contratos
 const CONTRACT_LOG_CHANNEL_ID =
     "1552634532262584391";
 
@@ -197,7 +201,7 @@ function verificarCanal(interaction) {
 
     return (
         interaction.channelId ===
-        config.CONTRACT_CHANNEL_ID
+        CONTRACT_CHANNEL_ID
     );
 }
 
@@ -292,7 +296,7 @@ async function executarPerm(interaction) {
 
         return interaction.reply({
             content:
-                `❌ Este comando só pode ser usado em <#${config.CONTRACT_CHANNEL_ID}>.`,
+                `❌ Este comando só pode ser usado em <#${CONTRACT_CHANNEL_ID}>.`,
             ephemeral: true
         });
     }
@@ -376,7 +380,7 @@ async function executarUnperm(interaction) {
 
         return interaction.reply({
             content:
-                `❌ Este comando só pode ser usado em <#${config.CONTRACT_CHANNEL_ID}>.`,
+                `❌ Este comando só pode ser usado em <#${CONTRACT_CHANNEL_ID}>.`,
             ephemeral: true
         });
     }
@@ -440,7 +444,7 @@ async function executarPermlist(interaction) {
 
         return interaction.reply({
             content:
-                `❌ Este comando só pode ser usado em <#${config.CONTRACT_CHANNEL_ID}>.`,
+                `❌ Este comando só pode ser usado em <#${CONTRACT_CHANNEL_ID}>.`,
             ephemeral: true
         });
     }
@@ -582,7 +586,7 @@ async function executarContract(interaction) {
 
         return interaction.reply({
             content:
-                `❌ Este comando só pode ser usado em <#${config.CONTRACT_CHANNEL_ID}>.`,
+                `❌ Este comando só pode ser usado em <#${CONTRACT_CHANNEL_ID}>.`,
             ephemeral: true
         });
     }
@@ -776,7 +780,7 @@ async function executarContract(interaction) {
             }
 
             console.log(
-                `📢 Enviando contrato no canal onde /contract foi usado: ${channel.id}`
+                `📢 Enviando contrato no chat ${channel.id}...`
             );
 
             await channel.send({
@@ -791,7 +795,7 @@ async function executarContract(interaction) {
             canalEnviado = true;
 
             console.log(
-                `✅ Contrato enviado no canal ${channel.id}.`
+                `✅ Contrato enviado no chat ${channel.id}.`
             );
 
         } catch (channelError) {
@@ -1052,6 +1056,10 @@ async function processarBotaoContrato(interaction) {
                 "❌ RECUSADO"
             );
 
+            // =========================================
+            // ATUALIZAR CONTRATO NO CHAT
+            // =========================================
+
             return interaction.update({
 
                 components: [
@@ -1264,7 +1272,7 @@ async function processarBotaoContrato(interaction) {
                     : "Cargo";
 
             // =========================================
-            // ATUALIZAR MENSAGEM DO CONTRATO
+            // ATUALIZAR CONTRATO NO CHAT
             // =========================================
 
             return interaction.update({
@@ -1342,7 +1350,7 @@ async function processarBotaoContrato(interaction) {
 }
 
 // =====================================================
-// LOG
+// LOG DOS RESULTADOS
 // =====================================================
 
 async function registrarContrato(
@@ -1445,11 +1453,17 @@ async function registrarContrato(
                 );
 
         await channel.send({
+
             components: [
                 container
             ],
+
             flags: 32768
         });
+
+        console.log(
+            `📋 Log do contrato enviado: ${resultado}`
+        );
 
     } catch (error) {
 
@@ -1470,7 +1484,7 @@ async function executarRelease(interaction) {
 
         return interaction.reply({
             content:
-                `❌ Este comando só pode ser usado em <#${config.CONTRACT_CHANNEL_ID}>.`,
+                `❌ Este comando só pode ser usado em <#${CONTRACT_CHANNEL_ID}>.`,
             ephemeral: true
         });
     }
