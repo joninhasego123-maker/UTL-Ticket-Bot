@@ -52,6 +52,14 @@ const {
 } = require("./freeagency");
 
 // =============================================
+// RULES
+// =============================================
+
+const {
+    rulesCommand
+} = require("./rules");
+
+// =============================================
 // CLIENT
 // =============================================
 
@@ -124,6 +132,12 @@ client.once("ready", async () => {
             // =====================================
 
             freeagencyCommand.toJSON(),
+
+            // =====================================
+            // RULES
+            // =====================================
+
+            rulesCommand.toJSON(),
 
             // =====================================
             // CONTRACTS
@@ -415,6 +429,25 @@ client.on(
                     );
 
                     return executarFreeagency(
+                        interaction
+                    );
+
+                }
+
+                // =====================================
+                // RULES
+                // =====================================
+
+                if (
+                    interaction.commandName ===
+                    "rules"
+                ) {
+
+                    console.log(
+                        "📜 Executando /rules..."
+                    );
+
+                    return rulesCommand.execute(
                         interaction
                     );
 
